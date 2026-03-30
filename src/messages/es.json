@@ -1,0 +1,103 @@
+{
+  "app": {
+    "name": "CoinPilot",
+    "tagline": "Finanzas inteligentes para parejas e individuos"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "transactions": "Transacciones",
+    "addExpense": "Agregar Gasto",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "login": {
+    "title": "Toma el control de tus finanzas",
+    "subtitle": "Registra gastos, establece metas de ahorro y administra gastos compartidos — juntos o en solitario.",
+    "google": "Continuar con Google",
+    "terms": "Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad."
+  },
+  "dashboard": {
+    "title": "Panel",
+    "totalIncome": "Ingreso Total",
+    "totalExpenses": "Gastos Totales",
+    "investment": "Inversión",
+    "balance": "Balance",
+    "sharedExpenses": "Gastos Compartidos",
+    "personalExpenses": "Gastos Personales",
+    "byCategory": "Por Categoría",
+    "monthlyTrend": "Tendencia Mensual",
+    "recentTransactions": "Transacciones Recientes",
+    "noData": "Aún no hay datos. ¡Empieza agregando tu primer gasto!",
+    "thisMonth": "Este Mes",
+    "income": "Ingresos",
+    "expenses": "Gastos"
+  },
+  "expense": {
+    "title": "Agregar Gasto",
+    "editTitle": "Editar Gasto",
+    "payer": "¿Quién pagó?",
+    "shared": "Compartido (Pareja)",
+    "category": "Categoría",
+    "amount": "Monto",
+    "date": "Fecha",
+    "description": "Descripción (opcional)",
+    "save": "Guardar Gasto",
+    "update": "Actualizar",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "success": "¡Gasto guardado!",
+    "deleted": "Gasto eliminado."
+  },
+  "transactions": {
+    "title": "Historial de Transacciones",
+    "filter": "Filtrar",
+    "all": "Todos",
+    "search": "Buscar transacciones...",
+    "noResults": "No se encontraron transacciones.",
+    "sortBy": "Ordenar por",
+    "newest": "Más recientes",
+    "oldest": "Más antiguos",
+    "highest": "Mayor monto",
+    "lowest": "Menor monto"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Perfil",
+    "displayName": "Nombre",
+    "partnerName": "Nombre de la Pareja",
+    "mode": "Modo",
+    "individual": "Individual",
+    "couple": "Pareja",
+    "financial": "Información Financiera",
+    "income": "Ingreso Neto Mensual",
+    "partnerIncome": "Ingreso Neto Mensual de la Pareja",
+    "investmentPct": "Meta de Inversión (%)",
+    "partnerInvestmentPct": "Meta de Inversión de la Pareja (%)",
+    "categories": "Categorías",
+    "addCategory": "Agregar Categoría",
+    "editCategory": "Editar Categoría",
+    "deleteCategory": "Eliminar Categoría",
+    "categoryName": "Nombre de la Categoría",
+    "language": "Idioma",
+    "english": "English",
+    "spanish": "Español",
+    "currency": "Moneda",
+    "save": "Guardar Cambios",
+    "saved": "¡Configuración guardada!",
+    "invitePartner": "Invitar Pareja",
+    "inviteCode": "Código de Invitación",
+    "dangerZone": "Zona de Peligro",
+    "deleteAccount": "Eliminar Cuenta"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Algo salió mal",
+    "retry": "Intentar de nuevo",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "back": "Volver"
+  }
+}

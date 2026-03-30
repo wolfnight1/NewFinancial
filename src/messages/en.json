@@ -1,0 +1,103 @@
+{
+  "app": {
+    "name": "CoinPilot",
+    "tagline": "Smart finances for couples & individuals"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "addExpense": "Add Expense",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "login": {
+    "title": "Take control of your finances",
+    "subtitle": "Track spending, set savings goals, and manage shared expenses — together or solo.",
+    "google": "Continue with Google",
+    "terms": "By continuing, you agree to our Terms of Service and Privacy Policy."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "investment": "Investment",
+    "balance": "Balance",
+    "sharedExpenses": "Shared Expenses",
+    "personalExpenses": "Personal Expenses",
+    "byCategory": "By Category",
+    "monthlyTrend": "Monthly Trend",
+    "recentTransactions": "Recent Transactions",
+    "noData": "No data yet. Start by adding your first expense!",
+    "thisMonth": "This Month",
+    "income": "Income",
+    "expenses": "Expenses"
+  },
+  "expense": {
+    "title": "Add Expense",
+    "editTitle": "Edit Expense",
+    "payer": "Who paid?",
+    "shared": "Shared (Couple)",
+    "category": "Category",
+    "amount": "Amount",
+    "date": "Date",
+    "description": "Description (optional)",
+    "save": "Save Expense",
+    "update": "Update",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "success": "Expense saved!",
+    "deleted": "Expense deleted."
+  },
+  "transactions": {
+    "title": "Transaction History",
+    "filter": "Filter",
+    "all": "All",
+    "search": "Search transactions...",
+    "noResults": "No transactions found.",
+    "sortBy": "Sort by",
+    "newest": "Newest first",
+    "oldest": "Oldest first",
+    "highest": "Highest amount",
+    "lowest": "Lowest amount"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "displayName": "Display Name",
+    "partnerName": "Partner Name",
+    "mode": "Mode",
+    "individual": "Individual",
+    "couple": "Couple",
+    "financial": "Financial Info",
+    "income": "Monthly Net Income",
+    "partnerIncome": "Partner Monthly Net Income",
+    "investmentPct": "Investment Goal (%)",
+    "partnerInvestmentPct": "Partner Investment Goal (%)",
+    "categories": "Categories",
+    "addCategory": "Add Category",
+    "editCategory": "Edit Category",
+    "deleteCategory": "Delete Category",
+    "categoryName": "Category Name",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Español",
+    "currency": "Currency",
+    "save": "Save Changes",
+    "saved": "Settings saved!",
+    "invitePartner": "Invite Partner",
+    "inviteCode": "Invite Code",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete Account"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back"
+  }
+}
