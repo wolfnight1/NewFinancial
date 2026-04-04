@@ -11,6 +11,7 @@ export function ExpenseForm() {
   const { state, addExpense, hydrated } = useFinance();
   const locale = useLocale() as AppLocale;
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     owner: 'shared' as ExpenseOwner,
     categoryId: state.categories[0]?.id ?? '',
@@ -26,10 +27,11 @@ export function ExpenseForm() {
   return (
     <form
       className="grid gap-5 rounded-[28px] border border-white/10 bg-slate-950/35 p-5"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
+        setLoading(true);
 
-        addExpense({
+        await addExpense({
           owner: form.owner,
           categoryId: form.categoryId,
           amount: Number(form.amount),
@@ -37,6 +39,7 @@ export function ExpenseForm() {
           note: form.note.trim(),
         });
 
+        setLoading(false);
         router.push('/dashboard', { locale });
       }}
     >
@@ -124,9 +127,10 @@ export function ExpenseForm() {
 
       <button
         type="submit"
-        className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+        disabled={loading}
+        className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 disabled:opacity-50"
       >
-        {t('save')}
+        {loading ? '...' : t('save')}
       </button>
     </form>
   );

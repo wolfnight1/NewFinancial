@@ -10,83 +10,87 @@ import {
 } from 'react';
 import { DEFAULT_STATE } from '@/lib/demo-data';
 import type { Category, Expense, FinanceSettings, FinanceState } from '@/lib/types';
-
-const STORAGE_KEY = 'coinpilot-state-v1';
+import { addExpense as dbAddExpense, getExpenses, getCategories, addCategory as dbAddCategory, removeCategory as dbRemoveCategory } from '@/lib/server/finance-actions';
+import { getFinanceSettings, updateHouseholdSettings } from '@/lib/server/settings-actions';
 
 type FinanceContextValue = {
   state: FinanceState;
   hydrated: boolean;
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
-  updateSettings: (settings: FinanceSettings) => void;
-  addCategory: (category: Omit<Category, 'id'>) => void;
-  removeCategory: (categoryId: string) => void;
+  addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
+  updateSettings: (settings: FinanceSettings) => Promise<void>;
+  addCategory: (category: { name: string; color: string }) => Promise<void>;
+  removeCategory: (categoryId: string) => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const FinanceContext = createContext<FinanceContextValue | null>(null);
-
-function createId(prefix: string) {
-  return `${prefix}-${crypto.randomUUID()}`;
-}
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FinanceState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+  // Load initial data from Supabase
+  const refresh = async () => {
+    try {
+      const [settings, categories, expenses] = await Promise.all([
+        getFinanceSettings(),
+        getCategories(),
+        getExpenses()
+      ]);
 
-      if (rawState) {
-        try {
-          setState(JSON.parse(rawState) as FinanceState);
-        } catch {
-          window.localStorage.removeItem(STORAGE_KEY);
-        }
-      }
-
+      setState({
+        settings: settings || DEFAULT_STATE.settings,
+        categories: categories.length > 0 ? categories : DEFAULT_STATE.categories,
+        expenses: expenses
+      });
+    } catch (error) {
+      console.error('Error refreshing finance state:', error);
+    } finally {
       setHydrated(true);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+    }
+  };
 
   useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
-
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, state]);
+    refresh();
+  }, []);
 
   const value = useMemo<FinanceContextValue>(
     () => ({
       state,
       hydrated,
-      addExpense(expense) {
-        setState((current) => ({
-          ...current,
-          expenses: [{ ...expense, id: createId('exp') }, ...current.expenses],
-        }));
+      async addExpense(expense) {
+        const res = await dbAddExpense(expense);
+        if (res.success) {
+          await refresh();
+        } else {
+          alert(res.error || 'Error al guardar el gasto');
+        }
       },
-      updateSettings(settings) {
-        setState((current) => ({
-          ...current,
-          settings,
-        }));
+      async updateSettings(settings) {
+        const res = await updateHouseholdSettings(settings);
+        if (res.success) {
+          await refresh();
+        } else {
+          alert(res.error || 'Error al guardar configuración');
+        }
       },
-      addCategory(category) {
-        setState((current) => ({
-          ...current,
-          categories: [...current.categories, { ...category, id: createId('cat') }],
-        }));
+      async addCategory(category) {
+        const res = await dbAddCategory(category);
+        if (res.success) {
+          await refresh();
+        } else {
+          alert(res.error || 'Error al guardar categoría');
+        }
       },
-      removeCategory(categoryId) {
-        setState((current) => ({
-          ...current,
-          categories: current.categories.filter((category) => category.id !== categoryId),
-          expenses: current.expenses.filter((expense) => expense.categoryId !== categoryId),
-        }));
+      async removeCategory(categoryId) {
+        const res = await dbRemoveCategory(categoryId);
+        if (res.success) {
+          await refresh();
+        } else {
+          alert(res.error || 'Error al eliminar categoría');
+        }
       },
+      refresh
     }),
     [hydrated, state]
   );

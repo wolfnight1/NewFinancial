@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useFinance } from '@/components/finance-provider';
 import type { AppLocale, FinanceSettings } from '@/lib/types';
+import { HouseholdSection } from '@/components/household-section';
 
 export function SettingsForm() {
   const t = useTranslations('settings');
@@ -13,6 +14,8 @@ export function SettingsForm() {
   const router = useRouter();
   const { state, hydrated, updateSettings, addCategory, removeCategory } = useFinance();
   const [categoryName, setCategoryName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const [form, setForm] = useState<FinanceSettings>(state.settings);
 
   if (!hydrated) {
@@ -23,9 +26,11 @@ export function SettingsForm() {
     <div className="space-y-6">
       <form
         className="grid gap-6 rounded-[28px] border border-white/10 bg-slate-950/35 p-5"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
-          updateSettings(form);
+          setLoading(true);
+          await updateSettings(form);
+          setLoading(false);
 
           if (form.language !== locale) {
             router.replace('/settings', { locale: form.language });
@@ -153,11 +158,14 @@ export function SettingsForm() {
 
         <button
           type="submit"
-          className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+          disabled={loading}
+          className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 disabled:opacity-50"
         >
-          {t('save')}
+          {loading ? '...' : t('save')}
         </button>
       </form>
+
+      <HouseholdSection />
 
       <section className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
         <div className="mb-5">
@@ -167,18 +175,20 @@ export function SettingsForm() {
 
         <form
           className="flex flex-col gap-3 sm:flex-row"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
 
-            if (!categoryName.trim()) {
+            if (!categoryName.trim() || categoryLoading) {
               return;
             }
 
-            addCategory({
+            setCategoryLoading(true);
+            await addCategory({
               name: categoryName.trim(),
               color: '#38bdf8',
             });
             setCategoryName('');
+            setCategoryLoading(false);
           }}
         >
           <input
@@ -189,9 +199,10 @@ export function SettingsForm() {
           />
           <button
             type="submit"
-            className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
+            disabled={categoryLoading}
+            className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:opacity-50"
           >
-            {t('addCategory')}
+            {categoryLoading ? '...' : t('addCategory')}
           </button>
         </form>
 
