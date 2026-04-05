@@ -21,7 +21,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
     .eq('user_id', user.id)
     .single();
 
-  if (!member) return { error: 'No household found' };
+  if (!member) return { error: 'Error Paso 2: No se encontro miembro del hogar' };
 
   const isUser1 = member.role === 'user1';
   const currentUserName = isUser1 ? settings.primaryUserName : settings.secondaryUserName;
