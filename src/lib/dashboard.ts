@@ -62,27 +62,28 @@ export function buildDashboardSummary(
   };
 }
 
+export const CHART_COLORS = [
+  '#34d399', // emerald
+  '#fb7185', // rose
+  '#818cf8', // indigo
+  '#fbbf24', // amber
+  '#a78bfa', // violet
+  '#38bdf8', // sky
+  '#f87171', // red
+  '#e879f9', // fuchsia
+  '#2dd4bf', // teal
+  '#c084fc', // purple
+];
+
 export function buildCategoryBreakdown(expenses: Expense[], categories: Category[]) {
   if (!categories || !Array.isArray(categories) || !expenses) return [];
 
-  const COLORS = [
-    '#38bdf8', // sky-400
-    '#818cf8', // indigo-400
-    '#34d399', // emerald-400
-    '#fbbf24', // amber-400
-    '#f87171', // red-400
-    '#a78bfa', // violet-400
-    '#fb7185', // rose-400
-    '#2dd4bf', // teal-400
-    '#e879f9', // fuchsia-400
-  ];
-
-  return categories
+  // Sort categories by amount to assign colors predictably based on spending rank
+  const breakdown = categories
     .map((category) => {
       return {
         id: category.id,
-        name: category.name,
-        color: category.color || '#94a3b8',
+        name: (category.name || '').trim(),
         amount: expenses
           .filter((expense) => expense.categoryId === category.id)
           .reduce((total, expense) => total + expense.amount, 0),
@@ -90,6 +91,12 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
     })
     .filter((item) => item.amount > 0)
     .sort((a, b) => b.amount - a.amount);
+
+  // Assign colors from the palette to the active categories
+  return breakdown.map((item, index) => ({
+    ...item,
+    color: CHART_COLORS[index % CHART_COLORS.length],
+  }));
 }
 
 export function buildTrendData(

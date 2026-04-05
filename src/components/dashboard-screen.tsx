@@ -20,6 +20,7 @@ import {
   buildDashboardSummary,
   buildTrendData,
   buildGroupBreakdown,
+  CHART_COLORS,
 } from '@/lib/dashboard';
 import { formatCurrency, formatLongDate } from '@/lib/format';
 import type { AppLocale, ExpenseOwner } from '@/lib/types';
@@ -48,15 +49,18 @@ export function DashboardScreen() {
     
     const monthlyTrend = buildTrendData(expenses, categories, groups, trendPeriod);
 
-    // Map of ALL category/group names to their defined colors for the chart series
+    // Map of ALL category/group names to their assigned colors
     const seriesMetaData = Object.create(null) as Record<string, string>;
     seriesMetaData['Otros'] = '#94a3b8';
 
+    // 1. Assign colors from groups (Macro Categories)
     groups.forEach(g => { 
       if (g?.name) seriesMetaData[g.name.trim()] = g.color || '#94a3b8'; 
     });
-    categories.forEach(c => { 
-      if (c?.name) seriesMetaData[c.name.trim()] = c.color || '#94a3b8'; 
+
+    // 2. Assign colors from the active category breakdown to ensure 1:1 match with Pie Chart
+    categoryBreakdown.forEach((item: any) => {
+      if (item.name) seriesMetaData[item.name.trim()] = item.color;
     });
 
     // Extract all unique series names present in the data rows (excluding the 'label' key)
