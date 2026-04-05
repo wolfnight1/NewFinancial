@@ -27,6 +27,10 @@ export type FinanceSettings = {
   secondaryIncome: number;
   primaryInvestmentPct: number;
   secondaryInvestmentPct: number;
+  primaryInvestmentType: 'percentage' | 'fixed';
+  secondaryInvestmentType: 'percentage' | 'fixed';
+  primaryInvestmentFixed: number;
+  secondaryInvestmentFixed: number;
   language: AppLocale;
   currency: string;
 };

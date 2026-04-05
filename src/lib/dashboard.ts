@@ -16,11 +16,19 @@ export function buildDashboardSummary(
     settings.primaryIncome +
     (settings.mode === 'couple' ? settings.secondaryIncome : 0);
 
-  const totalInvestment =
-    settings.primaryIncome * (settings.primaryInvestmentPct / 100) +
-    (settings.mode === 'couple'
-      ? settings.secondaryIncome * (settings.secondaryInvestmentPct / 100)
-      : 0);
+  const primaryInvestment =
+    settings.primaryInvestmentType === 'fixed'
+      ? settings.primaryInvestmentFixed
+      : settings.primaryIncome * (settings.primaryInvestmentPct / 100);
+
+  const secondaryInvestment =
+    settings.mode === 'couple'
+      ? settings.secondaryInvestmentType === 'fixed'
+        ? settings.secondaryInvestmentFixed
+        : settings.secondaryIncome * (settings.secondaryInvestmentPct / 100)
+      : 0;
+
+  const totalInvestment = (primaryInvestment || 0) + (secondaryInvestment || 0);
 
   const byOwner: Record<ExpenseOwner, number> = {
     user1: 0,

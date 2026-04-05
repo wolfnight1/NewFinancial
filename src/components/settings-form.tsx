@@ -101,24 +101,78 @@ export function SettingsForm() {
               }
               disabled={form.mode === 'individual'}
             />
-            <NumberField
-              label={t('investmentPct')}
-              value={form.primaryInvestmentPct}
-              onChange={(value) =>
-                setForm((current) => ({ ...current, primaryInvestmentPct: value }))
-              }
-            />
-            <NumberField
-              label={t('partnerInvestmentPct')}
-              value={form.secondaryInvestmentPct}
-              onChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  secondaryInvestmentPct: value,
-                }))
-              }
-              disabled={form.mode === 'individual'}
-            />
+            {/* User 1 Investment */}
+            <div className="grid gap-3">
+              <label className="text-sm text-slate-300">{t('investmentType')} (U1)</label>
+              <select
+                value={form.primaryInvestmentType}
+                onChange={(e) =>
+                  setForm((c) => ({
+                    ...c,
+                    primaryInvestmentType: e.target.value as 'percentage' | 'fixed',
+                  }))
+                }
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+              >
+                <option value="percentage">{t('percentage')}</option>
+                <option value="fixed">{t('fixed')}</option>
+              </select>
+              {form.primaryInvestmentType === 'percentage' ? (
+                <NumberField
+                  label={t('investmentPct')}
+                  value={form.primaryInvestmentPct}
+                  onChange={(value) =>
+                    setForm((current) => ({ ...current, primaryInvestmentPct: value }))
+                  }
+                />
+              ) : (
+                <NumberField
+                  label={t('investmentFixed')}
+                  value={form.primaryInvestmentFixed}
+                  onChange={(value) =>
+                    setForm((current) => ({ ...current, primaryInvestmentFixed: value }))
+                  }
+                />
+              )}
+            </div>
+
+            {/* User 2 Investment */}
+            <div className="grid gap-3">
+              <label className="text-sm text-slate-300">{t('investmentType')} (U2)</label>
+              <select
+                disabled={form.mode === 'individual'}
+                value={form.secondaryInvestmentType}
+                onChange={(e) =>
+                  setForm((c) => ({
+                    ...c,
+                    secondaryInvestmentType: e.target.value as 'percentage' | 'fixed',
+                  }))
+                }
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300 disabled:opacity-50"
+              >
+                <option value="percentage">{t('percentage')}</option>
+                <option value="fixed">{t('fixed')}</option>
+              </select>
+              {form.secondaryInvestmentType === 'percentage' ? (
+                <NumberField
+                  label={t('partnerInvestmentPct')}
+                  disabled={form.mode === 'individual'}
+                  value={form.secondaryInvestmentPct}
+                  onChange={(value) =>
+                    setForm((current) => ({ ...current, secondaryInvestmentPct: value }))
+                  }
+                />
+              ) : (
+                <NumberField
+                  label={t('investmentFixed')}
+                  disabled={form.mode === 'individual'}
+                  value={form.secondaryInvestmentFixed}
+                  onChange={(value) =>
+                    setForm((current) => ({ ...current, secondaryInvestmentFixed: value }))
+                  }
+                />
+              )}
+            </div>
           </div>
         </section>
 
@@ -150,6 +204,7 @@ export function SettingsForm() {
               className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
             >
               <option value="USD">USD</option>
+              <option value="CAD">CAD</option>
               <option value="COP">COP</option>
               <option value="EUR">EUR</option>
             </select>

@@ -88,6 +88,10 @@
     "english": "English",
     "spanish": "Spanish",
     "currency": "Currency",
+    "investmentType": "Investment type",
+    "percentage": "Percentage (%)",
+    "fixed": "Fixed amount",
+    "investmentFixed": "Fixed monthly investment",
     "save": "Save changes"
   },
   "common": {

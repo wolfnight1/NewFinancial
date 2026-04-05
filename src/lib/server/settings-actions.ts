@@ -14,11 +14,23 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
-  // 2. Update user profile (name, language, currency)
+  // 2. Get current role to know which name to update
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id, role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return { error: 'No household found' };
+
+  const isUser1 = member.role === 'user1';
+  const currentUserName = isUser1 ? settings.primaryUserName : settings.secondaryUserName;
+
+  // 3. Update user profile (name, language, currency)
   const { error: profileError } = await supabase
     .from('profiles')
     .update({
-      full_name: settings.primaryUserName,
+      full_name: currentUserName,
       preferred_locale: settings.language,
       currency: settings.currency,
       updated_at: new Date().toISOString()
@@ -30,23 +42,14 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
     return { error: 'No se pudo actualizar el perfil' };
   }
 
-  // 3. Update household member settings (income, investment %)
-  const { data: member } = await supabase
-    .from('household_members')
-    .select('household_id, role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!member) return { error: 'No household found' };
-
-  const isUser1 = member.role === 'user1';
-
-  // Update current user's financial data
+  // 4. Update household member settings
   const { error: memberError } = await supabase
     .from('household_members')
     .update({
       income: isUser1 ? settings.primaryIncome : settings.secondaryIncome,
-      investment_pct: isUser1 ? settings.primaryInvestmentPct : settings.secondaryInvestmentPct
+      investment_pct: isUser1 ? settings.primaryInvestmentPct : settings.secondaryInvestmentPct,
+      investment_type: isUser1 ? settings.primaryInvestmentType : settings.secondaryInvestmentType,
+      investment_fixed_amount: isUser1 ? settings.primaryInvestmentFixed : settings.secondaryInvestmentFixed
     })
     .eq('user_id', user.id);
 
@@ -89,7 +92,7 @@ export async function getFinanceSettings(): Promise<FinanceSettings | null> {
   const { data: members } = await supabase
     .from('household_members')
     .select(`
-      role, income, investment_pct,
+      role, income, investment_pct, investment_type, investment_fixed_amount,
       profiles (full_name)
     `)
     .eq('household_id', currentMember.household_id);
@@ -104,7 +107,11 @@ export async function getFinanceSettings(): Promise<FinanceSettings | null> {
     primaryIncome: Number(u1?.income || 0),
     secondaryIncome: Number(u2?.income || 0),
     primaryInvestmentPct: Number(u1?.investment_pct || 0),
-    secondaryInvestmentPct: Number(u2?.investment_pct || 0),
+    secondaryInvestmentPct: Number(u2?.investment_pct || 0), // Use consistent mapping
+    primaryInvestmentType: (u1?.investment_type as any) || 'percentage',
+    secondaryInvestmentType: (u2?.investment_type as any) || 'percentage',
+    primaryInvestmentFixed: Number(u1?.investment_fixed_amount || 0),
+    secondaryInvestmentFixed: Number(u2?.investment_fixed_amount || 0),
     language: (profile?.preferred_locale as any) || 'es',
     currency: profile?.currency || 'USD'
   };
