@@ -51,11 +51,23 @@ export function buildDashboardSummary(
 }
 
 export function buildCategoryBreakdown(expenses: Expense[], categories: Category[]) {
+  const COLORS = [
+    '#38bdf8', // sky-400
+    '#818cf8', // indigo-400
+    '#34d399', // emerald-400
+    '#fbbf24', // amber-400
+    '#f87171', // red-400
+    '#a78bfa', // violet-400
+    '#fb7185', // rose-400
+    '#2dd4bf', // teal-400
+    '#e879f9', // fuchsia-400
+  ];
+
   return categories
-    .map((category) => ({
+    .map((category, index) => ({
       id: category.id,
       name: category.name,
-      color: category.color,
+      color: category.color || COLORS[index % COLORS.length],
       amount: expenses
         .filter((expense) => expense.categoryId === category.id)
         .reduce((total, expense) => total + expense.amount, 0),

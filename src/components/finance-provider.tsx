@@ -86,6 +86,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       async updateSettings(settings) {
         const res = await updateHouseholdSettings(settings);
         if (res.success) {
+          // Give some time for DB to sync across replicas/cache
+          await new Promise(resolve => setTimeout(resolve, 500));
           await refresh();
         } else {
           alert(res.error || 'Error al guardar configuración');
