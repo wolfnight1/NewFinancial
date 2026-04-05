@@ -23,7 +23,8 @@ body {
   font-family: Seize UI, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
-select option {
+select option, 
+select optgroup {
   background-color: #0f172a;
   color: #f8fafc;
 }
