@@ -23,9 +23,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
 
   if (memberSelectError || !member) {
     console.error('Member select error:', memberSelectError);
-    return { 
-      error: `Error Paso 2: ${memberSelectError?.message || 'Registro no encontrado'} (User: ${user.id.substring(0, 8)}...)` 
-    };
+    return { error: 'No se encontró la información del hogar' };
   }
 
   const isUser1 = member.role === 'user1';
@@ -44,7 +42,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
 
   if (profileError) {
     console.error('Error updating profile:', profileError);
-    return { error: `Error Perfil: ${profileError.message} (${profileError.code})` };
+    return { error: `No se pudo actualizar el perfil: ${profileError.message}` };
   }
 
   // 4. Update household member settings
@@ -60,7 +58,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
 
   if (memberError) {
     console.error('Error updating member financial data:', memberError);
-    return { error: `Error Finanzas: ${memberError.message} (${memberError.code})` };
+    return { error: `No se pudo actualizar la info financiera: ${memberError.message}` };
   }
 
   revalidatePath('/[locale]/settings', 'page');
