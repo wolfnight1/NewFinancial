@@ -29,7 +29,36 @@ export function SettingsForm() {
   const [syncLoading, setSyncLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [syncResult, setSyncResult] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
+  const handleSync = async (dryRun: boolean) => {
+    if (!selectedFile) {
+      alert('Por favor selecciona un archivo primero');
+      return;
+    }
+
+    try {
+      setSyncLoading(true);
+      
+      const reader = new FileReader();
+      const fileData = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+
+      const res = await importOldData(fileData, dryRun);
+      setSyncResult(res);
+    } catch (err: any) {
+      alert('Error en la sincronización: ' + err.message);
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   const handleExport = async () => {
     try {
       setExportLoading(true);
@@ -560,39 +589,43 @@ export function SettingsForm() {
       {/* Migration / Import Section */}
       <section className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
         <div className="mb-5">
-          <h2 className="text-lg font-semibold">Sincronización de Datos (OLD_Data.xlsx)</h2>
+          <h2 className="text-lg font-semibold">Sincronización de Historial (.xlsx)</h2>
           <p className="text-sm text-slate-400">
-            Importa gastos históricos desde el archivo Excel en el servidor.
+            Carga un archivo Excel para sincronizar gastos pasados.
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-3">
+        <div className="flex flex-col gap-6">
+          <div className="grid gap-2">
+            <label className="text-xs text-slate-400 px-1">Seleccionar archivo Excel</label>
+            <input
+              type="file"
+              accept=".xlsx"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-sky-300/10 file:text-sky-300 hover:file:bg-sky-300/20"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              disabled={syncLoading}
-              onClick={async () => {
+              disabled={syncLoading || !selectedFile}
+              onClick={() => {
                 if (!confirm('¿Realizar prueba de importación (Dry Run)?')) return;
-                setSyncLoading(true);
-                const res = await importOldData(true);
-                setSyncResult(res);
-                setSyncLoading(false);
+                handleSync(true);
               }}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium transition hover:bg-white/10 disabled:opacity-50"
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium transition hover:bg-white/10 disabled:opacity-30"
             >
               Prueba (Dry Run)
             </button>
             <button
               type="button"
-              disabled={syncLoading}
-              onClick={async () => {
+              disabled={syncLoading || !selectedFile}
+              onClick={() => {
                 if (!confirm('ESTO INSERTARÁ DATOS REALES. ¿Confirmar importación?')) return;
-                setSyncLoading(true);
-                const res = await importOldData(false);
-                setSyncResult(res);
-                setSyncLoading(false);
+                handleSync(false);
               }}
-              className="rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 px-4 py-2 text-xs font-medium transition hover:bg-amber-500/20 disabled:opacity-50"
+              className="rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 px-4 py-2 text-xs font-medium transition hover:bg-amber-500/20 disabled:opacity-30"
             >
               Importar Real
             </button>

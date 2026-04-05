@@ -3,8 +3,6 @@
 import { createClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 import * as xlsx from 'xlsx';
-import path from 'path';
-import fs from 'fs';
 
 /**
  * Converts Excel serial date to ISO string (YYYY-MM-DD)
@@ -15,7 +13,7 @@ function excelDateToISO(serial: number): string {
   return date.toISOString().split('T')[0];
 }
 
-export async function importOldData(dryRun: boolean = true) {
+export async function importOldData(fileBase64: string, dryRun: boolean = true) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'No autenticado' };
@@ -30,13 +28,8 @@ export async function importOldData(dryRun: boolean = true) {
   if (!member) return { error: 'No se encontró el hogar' };
   const hId = member.household_id;
 
-  // 2. Read file
-  const filePath = path.join(process.cwd(), 'OLD_Data.xlsx');
-  if (!fs.existsSync(filePath)) {
-    return { error: 'El archivo OLD_Data.xlsx no se encuentra en el servidor.' };
-  }
-
-  const fileBuffer = fs.readFileSync(filePath);
+  // 2. Decode file
+  const fileBuffer = Buffer.from(fileBase64, 'base64');
   const workbook = xlsx.read(fileBuffer);
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
