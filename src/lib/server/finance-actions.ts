@@ -209,7 +209,7 @@ export async function upsertCategory(category: Partial<Category>) {
 
   if (error) {
     console.error('Error upserting category:', error);
-    return { error: 'No se pudo guardar la categoría' };
+    return { error: `Error DB: ${error.message} (${error.code})` };
   }
 
   revalidatePath('/[locale]/settings', 'page');

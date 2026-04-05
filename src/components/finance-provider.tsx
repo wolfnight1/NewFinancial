@@ -56,8 +56,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       setState({
         settings: settings || DEFAULT_STATE.settings,
-        categories: categories.length > 0 ? categories : DEFAULT_STATE.categories,
-        categoryGroups: groups.length > 0 ? groups : DEFAULT_STATE.categoryGroups,
+        categories: categories,
+        categoryGroups: groups,
         expenses: expenses
       });
     } catch (error) {

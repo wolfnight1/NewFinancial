@@ -86,7 +86,7 @@ export function AppShell({
 
             <div className="mt-10 px-4 pb-2">
               <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                © 2026 DshayTech
+                © 2026 <a href="https://www.dshaytech.com" target="_blank" rel="noopener noreferrer" className="hover:text-sky-300 underline underline-offset-2">DshayTech</a>
               </p>
               <p className="mt-1 text-[10px] text-slate-600 font-medium">
                 Version V0.15
