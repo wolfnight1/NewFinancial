@@ -37,7 +37,7 @@ export function DashboardScreen() {
   const summary = buildDashboardSummary(state.settings, state.expenses);
   const categoryBreakdown = buildCategoryBreakdown(state.expenses, state.categories);
   const groupBreakdown = buildGroupBreakdown(state.expenses, state.categories, state.categoryGroups);
-  const monthlyTrend = buildMonthlyTrend(state.expenses);
+  const monthlyTrend = buildMonthlyTrend(state.expenses, state.categories, state.categoryGroups);
   const ownerLabels: Record<ExpenseOwner, string> = {
     user1: state.settings.primaryUserName,
     user2: state.settings.secondaryUserName,
@@ -94,15 +94,32 @@ export function DashboardScreen() {
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyTrend}>
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
+              <BarChart data={monthlyTrend} barGap={4} barSize={24}>
+                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
+                <YAxis stroke="#94a3b8" fontSize={12} />
                 <Tooltip
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                  contentStyle={{ 
+                    backgroundColor: '#0f172a', 
+                    borderColor: 'rgba(255, 255, 255, 0.1)', 
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)'
+                  }}
+                  itemStyle={{ fontSize: '12px' }}
                   formatter={(value: number) =>
                     formatCurrency(value, locale, state.settings.currency)
                   }
                 />
-                <Bar dataKey="expenses" radius={[12, 12, 0, 0]} fill="#7dd3fc" />
+                {state.categoryGroups.map((group) => (
+                  <Bar 
+                    key={group.id} 
+                    dataKey={group.name} 
+                    fill={group.color} 
+                    radius={[4, 4, 0, 0]} 
+                  />
+                ))}
+                {/* Optional default group if any */}
+                <Bar dataKey="Otros" fill="#94a3b8" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

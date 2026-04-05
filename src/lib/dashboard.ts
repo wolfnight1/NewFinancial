@@ -94,23 +94,29 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
     .sort((a, b) => b.amount - a.amount);
 }
 
-export function buildMonthlyTrend(expenses: Expense[]) {
+export function buildMonthlyTrend(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {
   if (!expenses || !Array.isArray(expenses)) return [];
 
-  const buckets = new Map<string, number>();
+  const buckets = new Map<string, any>();
 
   for (const expense of expenses) {
     if (!expense.date || typeof expense.date !== 'string') continue;
-    const key = expense.date.slice(0, 7);
-    buckets.set(key, (buckets.get(key) ?? 0) + expense.amount);
+    const month = expense.date.slice(0, 7);
+    
+    const category = categories.find(c => c.id === expense.categoryId);
+    const group = groups.find(g => g.id === category?.groupId);
+    const groupName = group?.name || 'Otros';
+
+    if (!buckets.has(month)) {
+      buckets.set(month, { month });
+    }
+    
+    const row = buckets.get(month);
+    row[groupName] = (row[groupName] ?? 0) + expense.amount;
   }
 
-  return Array.from(buckets.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([month, amount]) => ({
-      month,
-      expenses: amount,
-    }));
+  return Array.from(buckets.values())
+    .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 export function buildGroupBreakdown(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {
