@@ -206,7 +206,6 @@ export function SettingsForm() {
               <option value="USD">USD</option>
               <option value="CAD">CAD</option>
               <option value="COP">COP</option>
-              <option value="EUR">EUR</option>
             </select>
           </div>
         </section>
