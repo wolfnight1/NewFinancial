@@ -93,14 +93,7 @@ export async function getFinanceSettings(): Promise<FinanceSettings | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // 1. Get profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  // 2. Get members of the household
+  // 1. Get current member to find the household
   const { data: currentMember } = await supabase
     .from('household_members')
     .select('household_id, role')
@@ -109,31 +102,24 @@ export async function getFinanceSettings(): Promise<FinanceSettings | null> {
 
   if (!currentMember) return null;
 
-  const { data: household } = await supabase
-    .from('households')
-    .select('usage_mode')
-    .eq('id', currentMember.household_id)
-    .single();
-
-  const { data: members } = await supabase
-    .from('household_members')
-    .select(`
-      role, income, investment_pct, investment_type, investment_fixed_amount,
-      profiles (full_name)
-    `)
-    .eq('household_id', currentMember.household_id);
+  // 2. Fetch all required data in one go (Household, all Members, and current Profile)
+  const [{ data: household }, { data: members }, { data: profile }] = await Promise.all([
+    supabase.from('households').select('*').eq('id', currentMember.household_id).single(),
+    supabase.from('household_members').select('*, profiles(full_name)').eq('household_id', currentMember.household_id),
+    supabase.from('profiles').select('*').eq('id', user.id).single()
+  ]);
 
   const u1 = members?.find(m => m.role === 'user1');
   const u2 = members?.find(m => m.role === 'user2');
 
   return {
     mode: (household?.usage_mode as any) || (u2 ? 'couple' : 'individual'),
-    primaryUserName: u1?.profiles && (u1.profiles as any).full_name || 'User 1',
-    secondaryUserName: u2?.profiles && (u2.profiles as any).full_name || 'User 2',
+    primaryUserName: u1?.profiles?.full_name || 'David',
+    secondaryUserName: u2?.profiles?.full_name || 'Jenny',
     primaryIncome: Number(u1?.income || 0),
     secondaryIncome: Number(u2?.income || 0),
     primaryInvestmentPct: Number(u1?.investment_pct || 0),
-    secondaryInvestmentPct: Number(u2?.investment_pct || 0), // Use consistent mapping
+    secondaryInvestmentPct: Number(u2?.investment_pct || 0),
     primaryInvestmentType: (u1?.investment_type as any) || 'percentage',
     secondaryInvestmentType: (u2?.investment_type as any) || 'percentage',
     primaryInvestmentFixed: Number(u1?.investment_fixed_amount || 0),
