@@ -6,6 +6,7 @@ import { useRouter } from '@/i18n/routing';
 import { useFinance } from '@/components/finance-provider';
 import type { AppLocale, FinanceSettings } from '@/lib/types';
 import { HouseholdSection } from '@/components/household-section';
+import { importOldData } from '@/lib/server/import-actions';
 
 export function SettingsForm() {
   const t = useTranslations('settings');
@@ -25,6 +26,8 @@ export function SettingsForm() {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResult, setSyncResult] = useState<any>(null);
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [form, setForm] = useState<FinanceSettings>(state.settings);
@@ -520,6 +523,73 @@ export function SettingsForm() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Migration / Import Section */}
+      <section className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
+        <div className="mb-5">
+          <h2 className="text-lg font-semibold">Sincronización de Datos (OLD_Data.xlsx)</h2>
+          <p className="text-sm text-slate-400">
+            Importa gastos históricos desde el archivo Excel en el servidor.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              disabled={syncLoading}
+              onClick={async () => {
+                if (!confirm('¿Realizar prueba de importación (Dry Run)?')) return;
+                setSyncLoading(true);
+                const res = await importOldData(true);
+                setSyncResult(res);
+                setSyncLoading(false);
+              }}
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium transition hover:bg-white/10 disabled:opacity-50"
+            >
+              Prueba (Dry Run)
+            </button>
+            <button
+              type="button"
+              disabled={syncLoading}
+              onClick={async () => {
+                if (!confirm('ESTO INSERTARÁ DATOS REALES. ¿Confirmar importación?')) return;
+                setSyncLoading(true);
+                const res = await importOldData(false);
+                setSyncResult(res);
+                setSyncLoading(false);
+              }}
+              className="rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 px-4 py-2 text-xs font-medium transition hover:bg-amber-500/20 disabled:opacity-50"
+            >
+              Importar Real
+            </button>
+          </div>
+
+          {syncResult && (
+            <div className="rounded-2xl bg-white/5 p-4 text-xs font-mono space-y-1">
+              {syncResult.error ? (
+                <p className="text-rose-400">Error: {syncResult.error}</p>
+              ) : (
+                <>
+                  <p className="text-emerald-400 font-bold">Resumen de {syncResult.results.dryRun ? 'Prueba' : 'Importación'}:</p>
+                  <p>Filas procesadas: {syncResult.results.totalRows}</p>
+                  <p>Nuevos gastos: {syncResult.results.imported}</p>
+                  <p>Duplicados omitidos: {syncResult.results.duplicates}</p>
+                  <p>Nuevas Categorías: {syncResult.results.newCategories}</p>
+                  <p>Nuevos Grupos: {syncResult.results.newGroups}</p>
+                  {syncResult.results.log.length > 0 && (
+                    <div className="mt-2 text-slate-500 max-h-32 overflow-y-auto border-t border-white/5 pt-2">
+                       {syncResult.results.log.map((l: string, i: number) => (
+                         <div key={i}>{l}</div>
+                       ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </section>
     </div>
