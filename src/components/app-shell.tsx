@@ -83,6 +83,15 @@ export function AppShell({
                 );
               })}
             </nav>
+
+            <div className="mt-10 px-4 pb-2">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                © 2026 DshayTech
+              </p>
+              <p className="mt-1 text-[10px] text-slate-600 font-medium">
+                Version V0.15
+              </p>
+            </div>
           </aside>
 
           <section className="space-y-6">{children}</section>
