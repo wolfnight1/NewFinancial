@@ -410,7 +410,8 @@ export function SettingsForm() {
                 <div className="grid gap-1.5">
                   <label className="text-[10px] text-slate-500 uppercase font-bold px-1">{t('fixedAmount')}</label>
                   <input
-                    step="0.01"
+                    type="number"
+                    step="any"
                     placeholder={t('fixedAmount')}
                     value={fixedAmount}
                     onChange={(e) => setFixedAmount(Number(e.target.value))}
