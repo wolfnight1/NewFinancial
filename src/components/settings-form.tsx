@@ -6,7 +6,7 @@ import { useRouter } from '@/i18n/routing';
 import { useFinance } from '@/components/finance-provider';
 import type { AppLocale, FinanceSettings } from '@/lib/types';
 import { HouseholdSection } from '@/components/household-section';
-import { importOldData } from '@/lib/server/import-actions';
+import { importOldData, exportDataToExcel } from '@/lib/server/import-actions';
 
 export function SettingsForm() {
   const t = useTranslations('settings');
@@ -27,7 +27,38 @@ export function SettingsForm() {
 
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [syncResult, setSyncResult] = useState<any>(null);
+  
+  const handleExport = async () => {
+    try {
+      setExportLoading(true);
+      const res = await exportDataToExcel();
+      if (res.error) throw new Error(res.error);
+      if (res.success && res.content) {
+        const byteCharacters = atob(res.content);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.fileName || 'Export.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (err: any) {
+      alert('Error exportando: ' + err.message);
+    } finally {
+      setExportLoading(false);
+    }
+  };
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [form, setForm] = useState<FinanceSettings>(state.settings);
@@ -564,6 +595,14 @@ export function SettingsForm() {
               className="rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 px-4 py-2 text-xs font-medium transition hover:bg-amber-500/20 disabled:opacity-50"
             >
               Importar Real
+            </button>
+            <button
+              type="button"
+              disabled={exportLoading}
+              onClick={handleExport}
+              className="rounded-xl border border-sky-300/30 text-sky-300 px-4 py-2 text-xs font-medium transition hover:bg-sky-300/10 disabled:opacity-50"
+            >
+              {exportLoading ? 'Exportando...' : 'Exportar Datos (.xlsx)'}
             </button>
           </div>
 

@@ -170,3 +170,50 @@ export async function importOldData(dryRun: boolean = true) {
 
   return { success: true, results };
 }
+
+export async function exportDataToExcel() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autenticado' };
+
+  // 1. Get current household
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return { error: 'No se encontró el hogar' };
+  const hId = member.household_id;
+
+  // 2. Fetch all relevant data
+  const [{ data: expenses }, { data: categories }, { data: groups }] = await Promise.all([
+    supabase.from('expenses').select('*').eq('household_id', hId).order('date', { ascending: false }),
+    supabase.from('categories').select('*').eq('household_id', hId),
+    supabase.from('category_groups').select('*').eq('household_id', hId)
+  ]);
+
+  const groupMap = new Map((groups || []).map(g => [g.id, g.name]));
+  const catMap = new Map((categories || []).map(c => [c.id, { name: c.name, gName: groupMap.get(c.group_id) || 'N/A' }]));
+
+  // 3. Map to flat JSON
+  const flatData = (expenses || []).map(e => ({
+    Fecha: e.date,
+    Monto: e.amount,
+    Nota: e.note || '',
+    Propietario: e.owner_type === 'user1' ? 'David' : e.owner_type === 'user2' ? 'Pame' : 'Pareja',
+    Grupo: catMap.get(e.category_id)?.gName || 'N/A',
+    Categoria: catMap.get(e.category_id)?.name || 'N/A',
+    'Creado el': new Date(e.created_at).toLocaleString()
+  }));
+
+  // 4. Generate Excel
+  const worksheet = xlsx.utils.json_to_sheet(flatData);
+  const workbook = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(workbook, worksheet, 'Gastos');
+  
+  // Return as Base64 string for Server Action transfer
+  const excelBase64 = xlsx.write(workbook, { type: 'base64', bookType: 'xlsx' });
+
+  return { success: true, fileName: `Finanzas_Export_${new Date().toISOString().split('T')[0]}.xlsx`, content: excelBase64 };
+}
