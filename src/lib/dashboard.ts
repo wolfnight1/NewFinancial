@@ -67,7 +67,9 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
     .map((category, index) => ({
       id: category.id,
       name: category.name,
-      color: category.color || COLORS[index % COLORS.length],
+      // Priority 1: Category specific color if it exists and is NOT the default blue
+      // Priority 2: Palette based on index
+      color: (category.color && category.color !== '#38bdf8') ? category.color : COLORS[index % COLORS.length],
       amount: expenses
         .filter((expense) => expense.categoryId === category.id)
         .reduce((total, expense) => total + expense.amount, 0),
