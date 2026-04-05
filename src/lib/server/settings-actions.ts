@@ -15,13 +15,18 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
   if (!user) return { error: 'Not authenticated' };
 
   // 2. Get current role to know which name to update
-  const { data: member } = await supabase
+  const { data: member, error: memberSelectError } = await supabase
     .from('household_members')
     .select('household_id, role')
     .eq('user_id', user.id)
     .single();
 
-  if (!member) return { error: 'Error Paso 2: No se encontro miembro del hogar' };
+  if (memberSelectError || !member) {
+    console.error('Member select error:', memberSelectError);
+    return { 
+      error: `Error Paso 2: ${memberSelectError?.message || 'Registro no encontrado'} (User: ${user.id.substring(0, 8)}...)` 
+    };
+  }
 
   const isUser1 = member.role === 'user1';
   const currentUserName = isUser1 ? settings.primaryUserName : settings.secondaryUserName;
