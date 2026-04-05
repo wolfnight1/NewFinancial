@@ -11,17 +11,22 @@ export function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      setLoading(true);
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      console.error('Error logging in:', error.message);
+      if (error) {
+        console.error('Error logging in:', error.message);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Unexpected error during login:', err);
       setLoading(false);
     }
   };
