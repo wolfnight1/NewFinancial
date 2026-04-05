@@ -33,6 +33,7 @@ export function DashboardScreen() {
   const locale = useLocale() as AppLocale;
 
   const [trendPeriod, setTrendPeriod] = useState<'month' | 'year'>('month');
+  const [breakdownPeriod, setBreakdownPeriod] = useState<'month' | 'year' | 'all'>('all');
 
   if (!hydrated || !state.settings) {
     return <LoadingCard label={commonT('loading')} />;
@@ -43,9 +44,21 @@ export function DashboardScreen() {
     const groups = Array.isArray(state.categoryGroups) ? state.categoryGroups : [];
     const expenses = Array.isArray(state.expenses) ? state.expenses : [];
 
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7);
+    const currentYear = now.getFullYear().toString();
+
+    // Filter expenses for the breakdown charts
+    const filteredExpenses = expenses.filter(e => {
+        if (breakdownPeriod === 'all') return true;
+        if (breakdownPeriod === 'month') return e.date.startsWith(currentMonth);
+        if (breakdownPeriod === 'year') return e.date.startsWith(currentYear);
+        return true;
+    });
+
     const summary = buildDashboardSummary(state.settings, expenses);
-    const categoryBreakdown = buildCategoryBreakdown(expenses, categories);
-    const groupBreakdown = buildGroupBreakdown(expenses, categories, groups);
+    const categoryBreakdown = buildCategoryBreakdown(filteredExpenses, categories);
+    const groupBreakdown = buildGroupBreakdown(filteredExpenses, categories, groups);
     
     const monthlyTrend = buildTrendData(expenses, categories, groups, trendPeriod);
 
@@ -176,8 +189,27 @@ export function DashboardScreen() {
           </article>
 
           <article className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
-            <h2 className="text-lg font-semibold">{t('byCategory')}</h2>
-            <p className="text-sm text-slate-400">{t('categoryHint')}</p>
+            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">{t('byCategory')}</h2>
+                <p className="text-sm text-slate-400">{t('categoryHint')}</p>
+              </div>
+              <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+                {(['month', 'year', 'all'] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setBreakdownPeriod(p)}
+                    className={`rounded-lg px-3 py-1.5 text-[10px] uppercase font-bold transition ${
+                      breakdownPeriod === p
+                        ? 'bg-sky-300 text-slate-950 shadow-lg shadow-sky-500/20'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {p === 'month' ? 'Mes' : p === 'year' ? 'Año' : 'Todo'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="mt-5 h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
