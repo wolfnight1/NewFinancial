@@ -75,11 +75,12 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
 
   return categories
     .map((category, index) => {
-      const fallbackColor = COLORS[index % COLORS.length] || '#38bdf8';
+      // For the visual breakdown, we always use the multi-color palette to ensure distinction
+      const displayColor = COLORS[index % COLORS.length];
       return {
         id: category.id,
         name: category.name,
-        color: category.color || fallbackColor,
+        color: displayColor,
         amount: expenses
           .filter((expense) => expense.categoryId === category.id)
           .reduce((total, expense) => total + expense.amount, 0),
