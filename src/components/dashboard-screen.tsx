@@ -33,34 +33,36 @@ export function DashboardScreen() {
   const locale = useLocale() as AppLocale;
 
   const [trendPeriod, setTrendPeriod] = useState<'month' | 'year'>('month');
-  const [breakdownPeriod, setBreakdownPeriod] = useState<'month' | 'year' | 'all'>('all');
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   if (!hydrated || !state.settings) {
     return <LoadingCard label={commonT('loading')} />;
   }
+
+  const navigateMonth = (direction: number) => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const date = new Date(year, month - 1 + direction, 1);
+    setSelectedMonth(date.toISOString().slice(0, 7));
+  };
 
   try {
     const categories = Array.isArray(state.categories) ? state.categories : [];
     const groups = Array.isArray(state.categoryGroups) ? state.categoryGroups : [];
     const expenses = Array.isArray(state.expenses) ? state.expenses : [];
 
-    const now = new Date();
-    const currentMonth = now.toISOString().slice(0, 7);
-    const currentYear = now.getFullYear().toString();
-
-    // Filter expenses for the breakdown charts
-    const filteredExpenses = expenses.filter(e => {
-        if (breakdownPeriod === 'all') return true;
-        if (breakdownPeriod === 'month') return e.date.startsWith(currentMonth);
-        if (breakdownPeriod === 'year') return e.date.startsWith(currentYear);
-        return true;
-    });
+    // Filter expenses for the breakdown charts based on the selected month
+    const filteredExpenses = expenses.filter(e => e.date.startsWith(selectedMonth));
 
     const summary = buildDashboardSummary(state.settings, expenses);
     const categoryBreakdown = buildCategoryBreakdown(filteredExpenses, categories);
     const groupBreakdown = buildGroupBreakdown(filteredExpenses, categories, groups);
     
     const monthlyTrend = buildTrendData(expenses, categories, groups, trendPeriod);
+    
+    // Formatter for the selected month label
+    const [selYear, selMonth] = selectedMonth.split('-').map(Number);
+    const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
+        .format(new Date(selYear, selMonth - 1));
 
     // Map of ALL category/group names to their assigned colors
     const seriesMetaData = Object.create(null) as Record<string, string>;
@@ -194,20 +196,24 @@ export function DashboardScreen() {
                 <h2 className="text-lg font-semibold">{t('byCategory')}</h2>
                 <p className="text-sm text-slate-400">{t('categoryHint')}</p>
               </div>
-              <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
-                {(['month', 'year', 'all'] as const).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setBreakdownPeriod(p)}
-                    className={`rounded-lg px-3 py-1.5 text-[10px] uppercase font-bold transition ${
-                      breakdownPeriod === p
-                        ? 'bg-sky-300 text-slate-950 shadow-lg shadow-sky-500/20'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {p === 'month' ? 'Mes' : p === 'year' ? 'Año' : 'Todo'}
-                  </button>
-                ))}
+              <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-1 px-3">
+                <button
+                  type="button"
+                  onClick={() => navigateMonth(-1)}
+                  className="p-1 text-slate-400 hover:text-sky-300 transition"
+                >
+                  <span className="text-lg font-bold">&lsaquo;</span>
+                </button>
+                <span className="min-w-32 text-center text-xs font-bold uppercase tracking-widest text-sky-200">
+                  {monthLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => navigateMonth(1)}
+                  className="p-1 text-slate-400 hover:text-sky-300 transition"
+                >
+                  <span className="text-lg font-bold">&rsaquo;</span>
+                </button>
               </div>
             </div>
             <div className="mt-5 h-72">
