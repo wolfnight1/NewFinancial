@@ -50,10 +50,10 @@ export function DashboardScreen() {
     const groups = Array.isArray(state.categoryGroups) ? state.categoryGroups : [];
     const expenses = Array.isArray(state.expenses) ? state.expenses : [];
 
-    // Filter expenses for the breakdown charts based on the selected month
+    // Filter expenses for the breakdown charts and summary based on the selected month
     const filteredExpenses = expenses.filter(e => e.date.startsWith(selectedMonth));
 
-    const summary = buildDashboardSummary(state.settings, expenses);
+    const summary = buildDashboardSummary(state.settings, filteredExpenses);
     const categoryBreakdown = buildCategoryBreakdown(filteredExpenses, categories);
     const groupBreakdown = buildGroupBreakdown(filteredExpenses, categories, groups);
     
@@ -119,6 +119,33 @@ export function DashboardScreen() {
 
     return (
       <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-2">
+          <div className="flex items-center gap-4 rounded-[20px] border border-white/10 bg-white/5 p-1.5 px-4 shadow-lg shadow-black/20">
+            <button
+              type="button"
+              onClick={() => navigateMonth(-1)}
+              className="p-1 px-2 text-slate-400 hover:text-sky-300 transition-colors"
+            >
+              <span className="text-2xl font-light">&lsaquo;</span>
+            </button>
+            <div className="flex flex-col items-center min-w-32">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 leading-none mb-1">
+                Mes en pantalla
+              </span>
+              <span className="text-sm font-bold uppercase tracking-widest text-sky-200">
+                {monthLabel}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigateMonth(1)}
+              className="p-1 px-2 text-slate-400 hover:text-sky-300 transition-colors"
+            >
+              <span className="text-2xl font-light">&rsaquo;</span>
+            </button>
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {cards.map(({ label, value, icon: Icon }) => (
             <article
@@ -195,25 +222,6 @@ export function DashboardScreen() {
               <div>
                 <h2 className="text-lg font-semibold">{t('byCategory')}</h2>
                 <p className="text-sm text-slate-400">{t('categoryHint')}</p>
-              </div>
-              <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-1 px-3">
-                <button
-                  type="button"
-                  onClick={() => navigateMonth(-1)}
-                  className="p-1 text-slate-400 hover:text-sky-300 transition"
-                >
-                  <span className="text-lg font-bold">&lsaquo;</span>
-                </button>
-                <span className="min-w-32 text-center text-xs font-bold uppercase tracking-widest text-sky-200">
-                  {monthLabel}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => navigateMonth(1)}
-                  className="p-1 text-slate-400 hover:text-sky-300 transition"
-                >
-                  <span className="text-lg font-bold">&rsaquo;</span>
-                </button>
               </div>
             </div>
             <div className="mt-5 h-72">
