@@ -4,9 +4,20 @@ const config: CapacitorConfig = {
   appId: 'com.coinpilot.app',
   appName: 'CoinPilot App',
   webDir: 'out',
+  android: {
+    allowMixedContent: true,
+  },
   server: {
     url: 'https://new-financial-one.vercel.app',
-    cleartext: true
+    cleartext: true,
+    androidScheme: 'https',
+    allowNavigation: [
+      'new-financial-one.vercel.app',
+      '*.google.com',
+      '*.googleapis.com',
+      '*.supabase.co',
+      'accounts.google.com',
+    ]
   }
 };
 
