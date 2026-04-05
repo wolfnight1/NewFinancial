@@ -3,12 +3,15 @@
 import { useTranslations } from 'next-intl';
 import { Landmark, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 export function LoginScreen() {
   const t = useTranslations('login');
   const appT = useTranslations('app');
   const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const locale = params?.locale as string ?? 'es';
 
   const handleGoogleLogin = async () => {
     try {
@@ -17,7 +20,7 @@ export function LoginScreen() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/${locale}/auth/callback`,
         },
       });
 

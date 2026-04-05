@@ -22,7 +22,7 @@ export async function signInWithGoogle(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback?next=/${locale}/dashboard`,
+      redirectTo: `${origin}/${locale}/auth/callback?next=/${locale}/dashboard`,
     },
   });
 
