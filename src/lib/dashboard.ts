@@ -100,32 +100,42 @@ export function buildTrendData(
   groups: CategoryGroup[],
   period: 'month' | 'year' = 'month'
 ) {
-  if (!expenses || !Array.isArray(expenses)) return [];
+  try {
+    if (!expenses || !Array.isArray(expenses)) return [];
+    const catList = Array.isArray(categories) ? categories : [];
+    const groupList = Array.isArray(groups) ? groups : [];
 
-  const buckets = new Map<string, any>();
+    const buckets = new Map<string, any>();
 
-  for (const expense of expenses) {
-    if (!expense.date || typeof expense.date !== 'string') continue;
-    
-    // Determine the label based on period
-    const label = period === 'month' ? expense.date.slice(0, 7) : expense.date.slice(0, 4);
-    
-    const category = categories.find(c => c.id === expense.categoryId);
-    const group = groups.find(g => g.id === category?.groupId);
-    
-    // Priority: Group Name > Category Name > "Otros"
-    const seriesName = group ? group.name : (category ? category.name : 'Otros');
+    for (const expense of expenses) {
+      if (!expense || !expense.date || typeof expense.date !== 'string') continue;
+      
+      const label = period === 'month' ? expense.date.slice(0, 7) : expense.date.slice(0, 4);
+      
+      const category = catList.find(c => c.id === expense.categoryId);
+      const group = groupList.find(g => g.id === category?.groupId);
+      
+      // Use label-safe group names
+      const seriesName = group ? group.name : (category ? category.name : 'Otros');
+      const amount = Number(expense.amount) || 0;
 
-    if (!buckets.has(label)) {
-      buckets.set(label, { label });
+      if (!buckets.has(label)) {
+        // Use a pure object to avoid prototype property collisions (like "toString")
+        const newRow = Object.create(null);
+        newRow.label = label;
+        buckets.set(label, newRow);
+      }
+      
+      const row = buckets.get(label);
+      row[seriesName] = (row[seriesName] || 0) + amount;
     }
-    
-    const row = buckets.get(label);
-    row[seriesName] = (row[seriesName] ?? 0) + expense.amount;
-  }
 
-  return Array.from(buckets.values())
-    .sort((a, b) => a.label.localeCompare(b.label));
+    return Array.from(buckets.values())
+      .sort((a, b) => (a.label || '').localeCompare(b.label || ''));
+  } catch (error) {
+    console.error('Critical error in buildTrendData:', error);
+    return [];
+  }
 }
 
 export function buildGroupBreakdown(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {

@@ -37,34 +37,49 @@ export function DashboardScreen() {
     return <LoadingCard label={commonT('loading')} />;
   }
 
-  const summary = buildDashboardSummary(state.settings, state.expenses);
-  const categoryBreakdown = buildCategoryBreakdown(state.expenses, state.categories);
-  const groupBreakdown = buildGroupBreakdown(state.expenses, state.categories, state.categoryGroups);
-  const monthlyTrend = buildTrendData(state.expenses, state.categories, state.categoryGroups, trendPeriod);
+  const categories = Array.isArray(state.categories) ? state.categories : [];
+  const groups = Array.isArray(state.categoryGroups) ? state.categoryGroups : [];
+  const expenses = Array.isArray(state.expenses) ? state.expenses : [];
+
+  const summary = buildDashboardSummary(state.settings, expenses);
+  const categoryBreakdown = buildCategoryBreakdown(expenses, categories);
+  const groupBreakdown = buildGroupBreakdown(expenses, categories, groups);
+  
+  const monthlyTrend = useMemo(() => {
+    try {
+      return buildTrendData(expenses, categories, groups, trendPeriod);
+    } catch (e) {
+      console.error('Error in buildTrendData:', e);
+      return [];
+    }
+  }, [expenses, categories, groups, trendPeriod]);
 
   // Map of category/group names to their defined colors for the chart series
   const seriesMetaData = useMemo(() => {
     const meta: Record<string, string> = { Otros: '#94a3b8' };
     
-    state.categoryGroups.forEach(g => {
-      meta[g.name] = g.color;
+    groups.forEach(g => {
+      if (g && g.name) meta[g.name] = g.color || '#94a3b8';
     });
     
-    state.categories.forEach(c => {
-      if (!c.groupId) {
-        meta[c.name] = c.color;
+    categories.forEach(c => {
+      if (c && c.name && !c.groupId) {
+        meta[c.name] = c.color || '#94a3b8';
       }
     });
 
     return meta;
-  }, [state.categoryGroups, state.categories]);
+  }, [groups, categories]);
 
   // Extract all unique series names present in the data rows (excluding the 'label' key)
   const activeSeries = useMemo(() => {
     const series = new Set<string>();
     monthlyTrend.forEach((row: any) => {
+      if (!row) return;
       Object.keys(row).forEach(key => {
-        if (key !== 'label' && row[key] > 0) series.add(key);
+        if (key !== 'label' && typeof row[key] === 'number' && row[key] > 0) {
+          series.add(key);
+        }
       });
     });
     return Array.from(series);
