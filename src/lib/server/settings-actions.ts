@@ -39,7 +39,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
 
   if (profileError) {
     console.error('Error updating profile:', profileError);
-    return { error: 'No se pudo actualizar el perfil' };
+    return { error: `Error Perfil: ${profileError.message} (${profileError.code})` };
   }
 
   // 4. Update household member settings
@@ -55,7 +55,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
 
   if (memberError) {
     console.error('Error updating member financial data:', memberError);
-    return { error: 'No se pudo actualizar la info financiera' };
+    return { error: `Error Finanzas: ${memberError.message} (${memberError.code})` };
   }
 
   revalidatePath('/[locale]/settings', 'page');
