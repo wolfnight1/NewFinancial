@@ -64,16 +64,17 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
   ];
 
   return categories
-    .map((category, index) => ({
-      id: category.id,
-      name: category.name,
-      // Priority 1: Category specific color if it exists and is NOT the default blue
-      // Priority 2: Palette based on index
-      color: (category.color && category.color !== '#38bdf8') ? category.color : COLORS[index % COLORS.length],
-      amount: expenses
-        .filter((expense) => expense.categoryId === category.id)
-        .reduce((total, expense) => total + expense.amount, 0),
-    }))
+    .map((category, index) => {
+      const fallbackColor = COLORS[index % COLORS.length] || '#38bdf8';
+      return {
+        id: category.id,
+        name: category.name,
+        color: category.color || fallbackColor,
+        amount: expenses
+          .filter((expense) => expense.categoryId === category.id)
+          .reduce((total, expense) => total + expense.amount, 0),
+      };
+    })
     .filter((item) => item.amount > 0)
     .sort((a, b) => b.amount - a.amount);
 }
