@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useFinance } from '@/components/finance-provider';
@@ -28,6 +28,13 @@ export function SettingsForm() {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [form, setForm] = useState<FinanceSettings>(state.settings);
+
+  // Update form when state.settings changes (after hydration)
+  useEffect(() => {
+    if (hydrated) {
+      setForm(state.settings);
+    }
+  }, [hydrated, state.settings]);
 
   if (!hydrated) {
     return null;

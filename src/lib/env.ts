@@ -17,7 +17,8 @@ export function getRequiredEnv(
   }
 
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    console.warn(`Warning: Missing environment variable: ${name}. This might break Supabase integration.`);
+    return '';
   }
 
   return value;

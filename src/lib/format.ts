@@ -13,9 +13,19 @@ export function formatCurrency(
 }
 
 export function formatLongDate(value: string, locale: AppLocale) {
-  return new Intl.DateTimeFormat(locale === 'es' ? 'es-CO' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(`${value}T00:00:00`));
+  if (!value || typeof value !== 'string') return '';
+  
+  try {
+    const date = new Date(`${value}T00:00:00`);
+    if (isNaN(date.getTime())) return value;
+
+    return new Intl.DateTimeFormat(locale === 'es' ? 'es-CO' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', value, error);
+    return value;
+  }
 }

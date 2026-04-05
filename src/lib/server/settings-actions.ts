@@ -78,8 +78,7 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
     // Continue even if mode update fails, but log it
   }
 
-  revalidatePath('/[locale]/settings', 'page');
-  revalidatePath('/[locale]/dashboard', 'page');
+  revalidatePath('/', 'layout');
   
   return { success: true };
 }

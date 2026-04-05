@@ -47,7 +47,9 @@ export function buildDashboardSummary(
   };
 
   const totalExpenses = expenses.reduce((total, expense) => {
-    byOwner[expense.owner] += expense.amount;
+    if (expense.owner in byOwner) {
+      byOwner[expense.owner] += expense.amount;
+    }
     return total + expense.amount;
   }, 0);
 
@@ -98,6 +100,7 @@ export function buildMonthlyTrend(expenses: Expense[]) {
   const buckets = new Map<string, number>();
 
   for (const expense of expenses) {
+    if (!expense.date || typeof expense.date !== 'string') continue;
     const key = expense.date.slice(0, 7);
     buckets.set(key, (buckets.get(key) ?? 0) + expense.amount);
   }

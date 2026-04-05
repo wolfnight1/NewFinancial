@@ -39,8 +39,7 @@ export async function addExpense(expense: Omit<Expense, 'id'>) {
     return { error: 'No se pudo guardar el gasto' };
   }
 
-  revalidatePath('/[locale]/dashboard', 'page');
-  revalidatePath('/[locale]/history', 'page');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
@@ -72,8 +71,7 @@ export async function deleteExpense(id: string) {
     return { error: 'No se pudo eliminar el gasto' };
   }
 
-  revalidatePath('/[locale]/dashboard', 'page');
-  revalidatePath('/[locale]/history', 'page');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
@@ -248,7 +246,7 @@ export async function upsertCategory(category: Partial<Category>) {
     return { error: `Error DB: ${error.message} (${error.code})` };
   }
 
-  revalidatePath('/[locale]/settings', 'page');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
@@ -284,7 +282,7 @@ export async function upsertCategoryGroup(group: Partial<CategoryGroup>) {
     return { error: `Error DB: ${error.message} (${error.code})` };
   }
 
-  revalidatePath('/[locale]/settings', 'page');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
@@ -316,7 +314,7 @@ export async function removeCategory(id: string) {
     return { error: 'No se pudo eliminar la categoría' };
   }
 
-  revalidatePath('/[locale]/settings', 'page');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
@@ -348,7 +346,7 @@ export async function removeCategoryGroup(id: string) {
     return { error: 'No se pudo eliminar el grupo' };
   }
 
-  revalidatePath('/[locale]/settings', 'page');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 
@@ -411,5 +409,5 @@ export async function checkAndInsertFixedExpenses() {
     }
   }
 
-  revalidatePath('/[locale]/dashboard', 'page');
+  revalidatePath('/', 'layout');
 }

@@ -24,6 +24,7 @@ import { formatCurrency, formatLongDate } from '@/lib/format';
 import type { AppLocale, ExpenseOwner } from '@/lib/types';
 
 export function DashboardScreen() {
+  const settingsT = useTranslations('settings');
   const t = useTranslations('dashboard');
   const commonT = useTranslations('common');
   const { state, hydrated } = useFinance();
@@ -154,7 +155,7 @@ export function DashboardScreen() {
 
       {/* Budget Progress Section */}
       <section className="mb-6 rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
-        <h2 className="text-lg font-semibold mb-5">{useTranslations('settings')('macroCategories')} - {t('balance')}</h2>
+        <h2 className="text-lg font-semibold mb-5">{settingsT('macroCategories')} - {t('balance')}</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {groupBreakdown.map((group) => {
             const isOverBudget = group.limit > 0 && group.spent > group.limit;
