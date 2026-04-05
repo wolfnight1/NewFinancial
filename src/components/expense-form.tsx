@@ -12,7 +12,6 @@ export function ExpenseForm() {
   const locale = useLocale() as AppLocale;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [form, setForm] = useState({
     owner: 'shared' as ExpenseOwner,
     categoryId: '',
@@ -21,9 +20,11 @@ export function ExpenseForm() {
     note: '',
   });
 
-  const filteredCategories = selectedGroupId 
-    ? state.categories.filter(c => c.groupId === selectedGroupId)
-    : state.categories;
+  // Group categories by their parent group name for better organization
+  const groupedCategories = state.categoryGroups.map(group => ({
+    groupName: group.name,
+    categories: state.categories.filter(c => c.groupId === group.id)
+  })).filter(g => g.categories.length > 0);
 
   if (!hydrated) {
     return null;
@@ -68,44 +69,27 @@ export function ExpenseForm() {
         </select>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label className="text-sm text-slate-300">{useTranslations('settings')('macroCategories')}</label>
-          <select
-            value={selectedGroupId}
-            onChange={(event) => {
-              setSelectedGroupId(event.target.value);
-              setForm(current => ({ ...current, categoryId: '' }));
-            }}
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-          >
-            <option value="">{useTranslations('settings')('selectGroup')}</option>
-            {state.categoryGroups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid gap-2">
-          <label className="text-sm text-slate-300">{t('category')}</label>
-          <select
-            required
-            value={form.categoryId}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, categoryId: event.target.value }))
-            }
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-          >
-            <option value="">{t('category')}</option>
-            {filteredCategories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="grid gap-2">
+        <label className="text-sm text-slate-300">{t('category')}</label>
+        <select
+          required
+          value={form.categoryId}
+          onChange={(event) =>
+            setForm((current) => ({ ...current, categoryId: event.target.value }))
+          }
+          className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+        >
+          <option value="">{t('category')}</option>
+          {groupedCategories.map((group) => (
+            <optgroup key={group.groupName} label={group.groupName}>
+              {group.categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
