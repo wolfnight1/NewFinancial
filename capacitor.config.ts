@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'CoinPilot App',
   webDir: 'out',
   server: {
-    url: 'https://personal-financial-ten.vercel.app',
+    url: 'https://new-financial-one.vercel.app',
     cleartext: true
   }
 };
