@@ -26,42 +26,48 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
     return { error: 'No se encontró la información del hogar' };
   }
 
-  const isUser1 = member.role === 'user1';
-  const currentUserName = isUser1 ? settings.primaryUserName : settings.secondaryUserName;
+  // 3. Get all members of this household to update both David and Jenny
+  const { data: allMembers } = await supabase
+    .from('household_members')
+    .select('user_id, role')
+    .eq('household_id', member.household_id);
 
-  // 3. Update user profile (name, language, currency)
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({
-      full_name: currentUserName,
+  const u1Member = allMembers?.find(m => m.role === 'user1');
+  const u2Member = allMembers?.find(m => m.role === 'user2');
+
+  // 4. Update Profile 1 (David/User1)
+  if (u1Member) {
+    await supabase.from('profiles').update({
+      full_name: settings.primaryUserName,
       preferred_locale: settings.language,
       currency: settings.currency,
       updated_at: new Date().toISOString()
-    })
-    .eq('id', user.id);
+    }).eq('id', u1Member.user_id);
 
-  if (profileError) {
-    console.error('Error updating profile:', profileError);
-    return { error: `No se pudo actualizar el perfil: ${profileError.message}` };
+    await supabase.from('household_members').update({
+      income: settings.primaryIncome,
+      investment_pct: settings.primaryInvestmentPct,
+      investment_type: settings.primaryInvestmentType,
+      investment_fixed_amount: settings.primaryInvestmentFixed
+    }).eq('user_id', u1Member.user_id);
   }
 
-  // 4. Update household member settings
-  const { error: memberError } = await supabase
-    .from('household_members')
-    .update({
-      income: isUser1 ? settings.primaryIncome : settings.secondaryIncome,
-      investment_pct: isUser1 ? settings.primaryInvestmentPct : settings.secondaryInvestmentPct,
-      investment_type: isUser1 ? settings.primaryInvestmentType : settings.secondaryInvestmentType,
-      investment_fixed_amount: isUser1 ? settings.primaryInvestmentFixed : settings.secondaryInvestmentFixed
-    })
-    .eq('user_id', user.id);
+  // 5. Update Profile 2 (Jenny/User2) if in couple mode
+  if (settings.mode === 'couple' && u2Member) {
+    await supabase.from('profiles').update({
+      full_name: settings.secondaryUserName,
+      updated_at: new Date().toISOString()
+    }).eq('id', u2Member.user_id);
 
-  if (memberError) {
-    console.error('Error updating member financial data:', memberError);
-    return { error: `No se pudo actualizar la info financiera: ${memberError.message}` };
+    await supabase.from('household_members').update({
+      income: settings.secondaryIncome,
+      investment_pct: settings.secondaryInvestmentPct,
+      investment_type: settings.secondaryInvestmentType,
+      investment_fixed_amount: settings.secondaryInvestmentFixed
+    }).eq('user_id', u2Member.user_id);
   }
 
-  // 5. Update household usage mode if specified
+  // 6. Update household usage mode
   const { error: householdError } = await supabase
     .from('households')
     .update({ usage_mode: settings.mode })

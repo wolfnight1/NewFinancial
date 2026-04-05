@@ -70,9 +70,21 @@ export async function deleteExpense(id: string) {
  */
 export async function getCategories() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return [];
+
   const { data: categories, error } = await supabase
     .from('categories')
     .select('*')
+    .eq('household_id', member.household_id)
     .order('name');
 
   if (error) {
@@ -156,9 +168,21 @@ export async function getCategoryGroups() {
  */
 export async function getExpenses() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return [];
+
   const { data: expenses, error } = await supabase
     .from('expenses')
     .select('*')
+    .eq('household_id', member.household_id)
     .order('date', { ascending: false });
 
   if (error) {
