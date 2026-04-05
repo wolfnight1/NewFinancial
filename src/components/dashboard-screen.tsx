@@ -29,7 +29,7 @@ export function DashboardScreen() {
   const { state, hydrated } = useFinance();
   const locale = useLocale() as AppLocale;
 
-  if (!hydrated) {
+  if (!hydrated || !state.settings) {
     return <LoadingCard label={commonT('loading')} />;
   }
 

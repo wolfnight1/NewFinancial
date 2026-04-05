@@ -50,10 +50,22 @@ export async function addExpense(expense: Omit<Expense, 'id'>) {
 export async function deleteExpense(id: string) {
   const supabase = await createClient();
   
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return { error: 'No household found' };
+
   const { error } = await supabase
     .from('expenses')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('household_id', member.household_id);
 
   if (error) {
     console.error('Error deleting expense:', error);
@@ -282,10 +294,22 @@ export async function upsertCategoryGroup(group: Partial<CategoryGroup>) {
 export async function removeCategory(id: string) {
   const supabase = await createClient();
   
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return { error: 'No household found' };
+
   const { error } = await supabase
     .from('categories')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('household_id', member.household_id);
 
   if (error) {
     console.error('Error removing category:', error);
@@ -301,7 +325,23 @@ export async function removeCategory(id: string) {
  */
 export async function removeCategoryGroup(id: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from('category_groups').delete().eq('id', id);
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return { error: 'No household found' };
+
+  const { error } = await supabase
+    .from('category_groups')
+    .delete()
+    .eq('id', id)
+    .eq('household_id', member.household_id);
 
   if (error) {
     console.error('Error removing group:', error);

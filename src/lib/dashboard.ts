@@ -12,20 +12,30 @@ export function buildDashboardSummary(
   settings: FinanceSettings,
   expenses: Expense[]
 ): Summary {
+  if (!settings) {
+    return {
+      totalIncome: 0,
+      totalExpenses: 0,
+      totalInvestment: 0,
+      balance: 0,
+      byOwner: { user1: 0, user2: 0, shared: 0 }
+    };
+  }
+
   const totalIncome =
-    settings.primaryIncome +
-    (settings.mode === 'couple' ? settings.secondaryIncome : 0);
+    (settings.primaryIncome || 0) +
+    (settings.mode === 'couple' ? (settings.secondaryIncome || 0) : 0);
 
   const primaryInvestment =
     settings.primaryInvestmentType === 'fixed'
-      ? settings.primaryInvestmentFixed
-      : settings.primaryIncome * (settings.primaryInvestmentPct / 100);
+      ? (settings.primaryInvestmentFixed || 0)
+      : (settings.primaryIncome || 0) * ((settings.primaryInvestmentPct || 0) / 100);
 
   const secondaryInvestment =
     settings.mode === 'couple'
       ? settings.secondaryInvestmentType === 'fixed'
-        ? settings.secondaryInvestmentFixed
-        : settings.secondaryIncome * (settings.secondaryInvestmentPct / 100)
+        ? (settings.secondaryInvestmentFixed || 0)
+        : (settings.secondaryIncome || 0) * ((settings.secondaryInvestmentPct || 0) / 100)
       : 0;
 
   const totalInvestment = (primaryInvestment || 0) + (secondaryInvestment || 0);
