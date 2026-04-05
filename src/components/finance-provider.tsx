@@ -44,9 +44,6 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // Load initial data from Supabase
   const refresh = async () => {
     try {
-      // Run auto-check for fixed expenses
-      await dbCheckFixed();
-
       const [settings, categories, groups, expenses] = await Promise.all([
         getFinanceSettings(),
         getCategories(),
@@ -69,6 +66,14 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refresh();
+
+    // Run auto-check for fixed expenses SILENTLY after initial load
+    // This prevents revalidation conflicts during the critical mount
+    const timer = setTimeout(() => {
+      dbCheckFixed().catch(err => console.error('Silent fix check failed:', err));
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const value = useMemo<FinanceContextValue>(
