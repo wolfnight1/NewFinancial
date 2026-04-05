@@ -94,29 +94,38 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
     .sort((a, b) => b.amount - a.amount);
 }
 
-export function buildMonthlyTrend(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {
+export function buildTrendData(
+  expenses: Expense[],
+  categories: Category[],
+  groups: CategoryGroup[],
+  period: 'month' | 'year' = 'month'
+) {
   if (!expenses || !Array.isArray(expenses)) return [];
 
   const buckets = new Map<string, any>();
 
   for (const expense of expenses) {
     if (!expense.date || typeof expense.date !== 'string') continue;
-    const month = expense.date.slice(0, 7);
+    
+    // Determine the label based on period
+    const label = period === 'month' ? expense.date.slice(0, 7) : expense.date.slice(0, 4);
     
     const category = categories.find(c => c.id === expense.categoryId);
     const group = groups.find(g => g.id === category?.groupId);
-    const groupName = group?.name || 'Otros';
+    
+    // Priority: Group Name > Category Name > "Otros"
+    const seriesName = group ? group.name : (category ? category.name : 'Otros');
 
-    if (!buckets.has(month)) {
-      buckets.set(month, { month });
+    if (!buckets.has(label)) {
+      buckets.set(label, { label });
     }
     
-    const row = buckets.get(month);
-    row[groupName] = (row[groupName] ?? 0) + expense.amount;
+    const row = buckets.get(label);
+    row[seriesName] = (row[seriesName] ?? 0) + expense.amount;
   }
 
   return Array.from(buckets.values())
-    .sort((a, b) => a.month.localeCompare(b.month));
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 export function buildGroupBreakdown(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {

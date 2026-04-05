@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { BarChart3, PiggyBank, Receipt, Scale } from 'lucide-react';
 import {
@@ -17,7 +18,7 @@ import { useFinance } from '@/components/finance-provider';
 import {
   buildCategoryBreakdown,
   buildDashboardSummary,
-  buildMonthlyTrend,
+  buildTrendData,
   buildGroupBreakdown,
 } from '@/lib/dashboard';
 import { formatCurrency, formatLongDate } from '@/lib/format';
@@ -30,6 +31,8 @@ export function DashboardScreen() {
   const { state, hydrated } = useFinance();
   const locale = useLocale() as AppLocale;
 
+  const [trendPeriod, setTrendPeriod] = useState<'month' | 'year'>('month');
+
   if (!hydrated || !state.settings) {
     return <LoadingCard label={commonT('loading')} />;
   }
@@ -37,7 +40,35 @@ export function DashboardScreen() {
   const summary = buildDashboardSummary(state.settings, state.expenses);
   const categoryBreakdown = buildCategoryBreakdown(state.expenses, state.categories);
   const groupBreakdown = buildGroupBreakdown(state.expenses, state.categories, state.categoryGroups);
-  const monthlyTrend = buildMonthlyTrend(state.expenses, state.categories, state.categoryGroups);
+  const monthlyTrend = buildTrendData(state.expenses, state.categories, state.categoryGroups, trendPeriod);
+
+  // Map of category/group names to their defined colors for the chart series
+  const seriesMetaData = useMemo(() => {
+    const meta: Record<string, string> = { Otros: '#94a3b8' };
+    
+    state.categoryGroups.forEach(g => {
+      meta[g.name] = g.color;
+    });
+    
+    state.categories.forEach(c => {
+      if (!c.groupId) {
+        meta[c.name] = c.color;
+      }
+    });
+
+    return meta;
+  }, [state.categoryGroups, state.categories]);
+
+  // Extract all unique series names present in the data rows (excluding the 'label' key)
+  const activeSeries = useMemo(() => {
+    const series = new Set<string>();
+    monthlyTrend.forEach((row: any) => {
+      Object.keys(row).forEach(key => {
+        if (key !== 'label' && row[key] > 0) series.add(key);
+      });
+    });
+    return Array.from(series);
+  }, [monthlyTrend]);
   const ownerLabels: Record<ExpenseOwner, string> = {
     user1: state.settings.primaryUserName,
     user2: state.settings.secondaryUserName,
@@ -88,14 +119,31 @@ export function DashboardScreen() {
 
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <article className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
-          <div className="mb-5">
-            <h2 className="text-lg font-semibold">{t('monthlyTrend')}</h2>
-            <p className="text-sm text-slate-400">{t('monthlyTrendHint')}</p>
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">{t('monthlyTrend')}</h2>
+              <p className="text-sm text-slate-400">{t('monthlyTrendHint')}</p>
+            </div>
+            <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+              {(['month', 'year'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setTrendPeriod(p)}
+                  className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
+                    trendPeriod === p
+                      ? 'bg-sky-300 text-slate-950 shadow-lg shadow-sky-500/20'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {p === 'month' ? 'Mensual' : 'Anual'}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyTrend} barGap={4} barSize={24}>
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
+                <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
                 <YAxis stroke="#94a3b8" fontSize={12} />
                 <Tooltip
                   cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
@@ -110,16 +158,14 @@ export function DashboardScreen() {
                     formatCurrency(value, locale, state.settings.currency)
                   }
                 />
-                {state.categoryGroups.map((group) => (
+                {activeSeries.map((seriesName) => (
                   <Bar 
-                    key={group.id} 
-                    dataKey={group.name} 
-                    fill={group.color} 
+                    key={seriesName} 
+                    dataKey={seriesName} 
+                    fill={seriesMetaData[seriesName] || '#94a3b8'} 
                     radius={[4, 4, 0, 0]} 
                   />
                 ))}
-                {/* Optional default group if any */}
-                <Bar dataKey="Otros" fill="#94a3b8" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
