@@ -61,6 +61,17 @@ export async function updateHouseholdSettings(settings: FinanceSettings) {
     return { error: `No se pudo actualizar la info financiera: ${memberError.message}` };
   }
 
+  // 5. Update household usage mode if specified
+  const { error: householdError } = await supabase
+    .from('households')
+    .update({ usage_mode: settings.mode })
+    .eq('id', member.household_id);
+
+  if (householdError) {
+    console.error('Error updating household mode:', householdError);
+    // Continue even if mode update fails, but log it
+  }
+
   revalidatePath('/[locale]/settings', 'page');
   revalidatePath('/[locale]/dashboard', 'page');
   
@@ -92,6 +103,12 @@ export async function getFinanceSettings(): Promise<FinanceSettings | null> {
 
   if (!currentMember) return null;
 
+  const { data: household } = await supabase
+    .from('households')
+    .select('usage_mode')
+    .eq('id', currentMember.household_id)
+    .single();
+
   const { data: members } = await supabase
     .from('household_members')
     .select(`
@@ -104,7 +121,7 @@ export async function getFinanceSettings(): Promise<FinanceSettings | null> {
   const u2 = members?.find(m => m.role === 'user2');
 
   return {
-    mode: u2 ? 'couple' : 'individual',
+    mode: (household?.usage_mode as any) || (u2 ? 'couple' : 'individual'),
     primaryUserName: u1?.profiles && (u1.profiles as any).full_name || 'User 1',
     secondaryUserName: u2?.profiles && (u2.profiles as any).full_name || 'User 2',
     primaryIncome: Number(u1?.income || 0),

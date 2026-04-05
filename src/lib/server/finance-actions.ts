@@ -245,7 +245,7 @@ export async function upsertCategoryGroup(group: Partial<CategoryGroup>) {
 
   if (error) {
     console.error('Error upserting group:', error);
-    return { error: 'No se pudo guardar el grupo' };
+    return { error: `Error DB: ${error.message} (${error.code})` };
   }
 
   revalidatePath('/[locale]/settings', 'page');
