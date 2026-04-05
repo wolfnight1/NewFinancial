@@ -410,7 +410,7 @@ export function SettingsForm() {
                 <div className="grid gap-1.5">
                   <label className="text-[10px] text-slate-500 uppercase font-bold px-1">{t('fixedAmount')}</label>
                   <input
-                    type="number"
+                    step="0.01"
                     placeholder={t('fixedAmount')}
                     value={fixedAmount}
                     onChange={(e) => setFixedAmount(Number(e.target.value))}
@@ -558,7 +558,7 @@ function NumberField({
       <label className="text-sm text-slate-300">{label}</label>
       <input
         min="0"
-        step="1"
+        step="0.01"
         type="number"
         value={value}
         disabled={disabled}
