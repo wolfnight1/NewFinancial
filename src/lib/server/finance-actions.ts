@@ -93,20 +93,57 @@ export async function getCategories() {
 
 /**
  * Fetches category groups for the current household
+ * Seeds defaults if none exist
  */
 export async function getCategoryGroups() {
   const supabase = await createClient();
-  const { data: groups, error } = await supabase
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: member } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!member) return [];
+
+  let { data: groups, error } = await supabase
     .from('category_groups')
     .select('*')
+    .eq('household_id', member.household_id)
     .order('name');
+
+  // AUTO-SEED: If no groups exist, create defaults
+  if (!groups || groups.length === 0) {
+    const defaults = [
+      { household_id: member.household_id, name: 'Renta', color: '#673AB7', budget_limit: 3000 },
+      { household_id: member.household_id, name: 'Mercado', color: '#4CAF50', budget_limit: 750 },
+      { household_id: member.household_id, name: 'Salidas', color: '#E91E63', budget_limit: 600 },
+      { household_id: member.household_id, name: 'Servicios / Utilities', color: '#2196F3', budget_limit: 450 },
+      { household_id: member.household_id, name: 'Transporte', color: '#00BCD4', budget_limit: 400 },
+      { household_id: member.household_id, name: 'Gasolina', color: '#FF9800', budget_limit: 150 },
+      { household_id: member.household_id, name: 'Extras', color: '#9C27B0', budget_limit: 100 },
+    ];
+    
+    await supabase.from('category_groups').insert(defaults);
+    
+    // Fetch again after insert
+    const { data: newGroups } = await supabase
+      .from('category_groups')
+      .select('*')
+      .eq('household_id', member.household_id)
+      .order('name');
+    groups = newGroups;
+  }
 
   if (error) {
     console.error('Error fetching category groups:', error);
     return [];
   }
 
-  return groups.map(g => ({
+  return (groups || []).map(g => ({
     id: g.id,
     name: g.name,
     color: g.color,

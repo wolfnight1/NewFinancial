@@ -3,18 +3,18 @@ import type { FinanceState } from '@/lib/types';
 export const DEFAULT_STATE: FinanceState = {
   settings: {
     mode: 'couple',
-    primaryUserName: 'Alex',
-    secondaryUserName: 'Sam',
-    primaryIncome: 3200,
-    secondaryIncome: 2800,
-    primaryInvestmentPct: 12,
+    primaryUserName: 'Usuario 1',
+    secondaryUserName: 'Usuario 2',
+    primaryIncome: 5000,
+    secondaryIncome: 4500,
+    primaryInvestmentPct: 15,
     secondaryInvestmentPct: 15,
     primaryInvestmentType: 'percentage',
     secondaryInvestmentType: 'percentage',
     primaryInvestmentFixed: 0,
     secondaryInvestmentFixed: 0,
     language: 'es',
-    currency: 'USD',
+    currency: 'CAD',
   },
   categories: [
     { id: 'cat-uber', name: 'UBER', color: '#000000' },
@@ -27,8 +27,13 @@ export const DEFAULT_STATE: FinanceState = {
     { id: 'cat-amazon', name: 'Amazon', color: '#FF9900' },
   ],
   categoryGroups: [
-    { id: 'group-gen', name: 'General', color: '#607D8B', budgetLimit: 0 },
-    { id: 'group-merc', name: 'Mercado', color: '#4CAF50', budgetLimit: 500 },
+    { id: '1', name: 'Renta', color: '#673AB7', budgetLimit: 3000 },
+    { id: '2', name: 'Mercado', color: '#4CAF50', budgetLimit: 750 },
+    { id: '3', name: 'Salidas', color: '#E91E63', budgetLimit: 600 },
+    { id: '4', name: 'Servicios / Utilities', color: '#2196F3', budgetLimit: 450 },
+    { id: '5', name: 'Transporte', color: '#00BCD4', budgetLimit: 400 },
+    { id: '6', name: 'Gasolina', color: '#FF9800', budgetLimit: 150 },
+    { id: '7', name: 'Extras', color: '#9C27B0', budgetLimit: 100 },
   ],
   expenses: [
     {
