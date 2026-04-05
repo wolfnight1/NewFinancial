@@ -574,10 +574,23 @@ export function SettingsForm() {
               ) : (
                 <>
                   <p className="text-emerald-400 font-bold">Resumen de {syncResult.results.dryRun ? 'Prueba' : 'Importación'}:</p>
-                  <p>Filas procesadas: {syncResult.results.totalRows}</p>
-                  <p>Nuevos gastos: {syncResult.results.imported}</p>
-                  <p>Duplicados omitidos: {syncResult.results.duplicates}</p>
-                  <p>Nuevas Categorías: {syncResult.results.newCategories}</p>
+                  <p>Filas procesadas (Excel): {syncResult.results.totalRows}</p>
+                  <p>Gastos detectados en BD: {syncResult.results.totalExistingInDB}</p>
+                  <p>Sincronizados (Nuevos): {syncResult.results.imported}</p>
+                  <p>Omitidos (Ya existen): {syncResult.results.duplicates}</p>
+                  
+                  {syncResult.results.sampleDuplicates && syncResult.results.sampleDuplicates.length > 0 && (
+                    <div className="mt-2 bg-black/30 p-2 rounded-lg">
+                      <p className="text-amber-400 mb-1">Ejemplos de duplicados:</p>
+                      {syncResult.results.sampleDuplicates.map((s: string, i: number) => (
+                        <div key={i} className="text-[10px] text-slate-400 truncate">
+                          {s}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="mt-2">Nuevas Categorías: {syncResult.results.newCategories}</p>
                   <p>Nuevos Grupos: {syncResult.results.newGroups}</p>
                   {syncResult.results.log.length > 0 && (
                     <div className="mt-2 text-slate-500 max-h-32 overflow-y-auto border-t border-white/5 pt-2">

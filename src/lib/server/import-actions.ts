@@ -58,14 +58,16 @@ export async function importOldData(dryRun: boolean = true) {
     totalRows: 0,
     imported: 0,
     duplicates: 0,
+    totalExistingInDB: (existingExpenses || []).length,
     errors: 0,
     newCategories: 0,
     newGroups: 0,
+    dryRun: dryRun,
+    sampleDuplicates: [] as string[],
     log: [] as string[]
   };
 
   // 4. Process rows
-  // Skip row 0 if it's junk, but looking at our research, it seems the data starts early
   for (const row of rows) {
     if (!row || row.length < 4 || !row[2] || !row[3]) continue;
     results.totalRows++;
@@ -85,6 +87,9 @@ export async function importOldData(dryRun: boolean = true) {
     const dupKey = `${rawDate}_${amount}_${rawNote.toLowerCase()}`;
     if (expenseExists.has(dupKey)) {
       results.duplicates++;
+      if (results.sampleDuplicates.length < 5) {
+        results.sampleDuplicates.push(`${rawDate} | ${amount} | ${rawNote}`);
+      }
       continue;
     }
 
