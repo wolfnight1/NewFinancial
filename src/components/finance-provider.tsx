@@ -56,9 +56,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       setState({
         settings: settings || DEFAULT_STATE.settings,
-        categories: categories,
-        categoryGroups: groups,
-        expenses: expenses
+        categories: categories || [],
+        categoryGroups: groups || [],
+        expenses: expenses || []
       });
     } catch (error) {
       console.error('Error refreshing finance state:', error);

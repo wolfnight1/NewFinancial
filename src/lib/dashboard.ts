@@ -61,6 +61,8 @@ export function buildDashboardSummary(
 }
 
 export function buildCategoryBreakdown(expenses: Expense[], categories: Category[]) {
+  if (!categories || !Array.isArray(categories) || !expenses) return [];
+
   const COLORS = [
     '#38bdf8', // sky-400
     '#818cf8', // indigo-400
@@ -91,6 +93,8 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
 }
 
 export function buildMonthlyTrend(expenses: Expense[]) {
+  if (!expenses || !Array.isArray(expenses)) return [];
+
   const buckets = new Map<string, number>();
 
   for (const expense of expenses) {
@@ -107,6 +111,8 @@ export function buildMonthlyTrend(expenses: Expense[]) {
 }
 
 export function buildGroupBreakdown(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {
+  if (!groups || !Array.isArray(groups) || !categories || !expenses) return [];
+
   return groups.map(group => {
     const groupCategoryIds = new Set(
       categories.filter(c => c.groupId === group.id).map(c => c.id)
