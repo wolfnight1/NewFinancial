@@ -107,6 +107,7 @@
   },
   "common": {
     "loading": "Loading...",
-    "delete": "Delete"
+    "delete": "Delete",
+    "save": "Save"
   }
 }

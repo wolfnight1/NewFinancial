@@ -140,9 +140,9 @@ export async function getExpenses() {
 }
 
 /**
- * Adds a new category to the household
+ * Adds or Updates a category
  */
-export async function addCategory(category: Partial<Category>) {
+export async function upsertCategory(category: Partial<Category>) {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
@@ -156,20 +156,22 @@ export async function addCategory(category: Partial<Category>) {
 
   if (!member) return { error: 'No household found' };
 
-  const { error } = await supabase
-    .from('categories')
-    .insert({
-      household_id: member.household_id,
-      name: category.name,
-      color: category.color,
-      group_id: category.groupId,
-      is_fixed: category.isFixed || false,
-      fixed_amount: category.fixedAmount || 0,
-      fixed_day: category.fixedDay || 1
-    });
+  const payload = {
+    household_id: member.household_id,
+    name: category.name,
+    color: category.color,
+    group_id: category.groupId,
+    is_fixed: category.isFixed || false,
+    fixed_amount: category.fixedAmount || 0,
+    fixed_day: category.fixedDay || 1
+  };
+
+  const { error } = category.id
+    ? await supabase.from('categories').update(payload).eq('id', category.id)
+    : await supabase.from('categories').insert(payload);
 
   if (error) {
-    console.error('Error adding category:', error);
+    console.error('Error upserting category:', error);
     return { error: 'No se pudo guardar la categoría' };
   }
 
@@ -291,7 +293,11 @@ export async function checkAndInsertFixedExpenses() {
   // 3. Insert missing ones
   for (const cat of fixedCategories) {
     if (!existingCategoryIds.has(cat.id)) {
-      const expenseDate = new Date(now.getFullYear(), now.getMonth(), cat.fixed_day || 1);
+      // Handle months with fewer days (e.g., Feb 30th -> Feb 28/29th)
+      const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const actualDay = Math.min(cat.fixed_day || 1, lastDayOfCurrentMonth);
+      
+      const expenseDate = new Date(now.getFullYear(), now.getMonth(), actualDay);
       
       await supabase.from('expenses').insert({
         household_id: member.household_id,

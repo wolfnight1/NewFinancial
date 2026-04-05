@@ -18,9 +18,11 @@ export function SettingsForm() {
   const [isFixed, setIsFixed] = useState(false);
   const [fixedAmount, setFixedAmount] = useState(0);
   const [fixedDay, setFixedDay] = useState(1);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   
   const [groupName, setGroupName] = useState('');
   const [groupLimit, setGroupLimit] = useState(0);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [categoryLoading, setCategoryLoading] = useState(false);
@@ -238,42 +240,63 @@ export function SettingsForm() {
         </div>
 
         <form
-          className="grid gap-3 sm:grid-cols-3"
+          className="grid gap-3 sm:grid-cols-4 items-end"
           onSubmit={async (event) => {
             event.preventDefault();
             if (!groupName.trim() || groupLoading) return;
 
             setGroupLoading(true);
             await upsertCategoryGroup({
+              id: editingGroupId || undefined,
               name: groupName.trim(),
               color: '#607D8B',
               budgetLimit: groupLimit,
             });
             setGroupName('');
             setGroupLimit(0);
+            setEditingGroupId(null);
             setGroupLoading(false);
           }}
         >
-          <input
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            placeholder={t('groupName')}
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-          />
-          <input
-            type="number"
-            value={groupLimit}
-            onChange={(e) => setGroupLimit(Number(e.target.value))}
-            placeholder={t('budgetLimit')}
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-          />
+          <div className="grid gap-2">
+            <label className="text-xs text-slate-400 px-1">{t('groupName')}</label>
+            <input
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder={t('groupName')}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs text-slate-400 px-1">{t('budgetLimit')}</label>
+            <input
+              type="number"
+              value={groupLimit}
+              onChange={(e) => setGroupLimit(Number(e.target.value))}
+              placeholder={t('budgetLimit')}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+            />
+          </div>
           <button
             type="submit"
             disabled={groupLoading}
-            className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:opacity-50"
+            className="rounded-2xl bg-sky-300 text-slate-950 px-4 py-3 text-sm font-semibold transition hover:bg-sky-200 disabled:opacity-50"
           >
-            {groupLoading ? '...' : t('addMacroCategory')}
+            {groupLoading ? '...' : (editingGroupId ? commonT('save') : t('addMacroCategory'))}
           </button>
+          {editingGroupId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingGroupId(null);
+                setGroupName('');
+                setGroupLimit(0);
+              }}
+              className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/10"
+            >
+              Cancelar
+            </button>
+          )}
         </form>
 
         <div className="mt-5 grid gap-3">
@@ -285,16 +308,29 @@ export function SettingsForm() {
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium">{group.name}</span>
                 <span className="text-xs text-slate-400">
-                  (Limit: {state.settings.currency} {group.budgetLimit})
+                  ({t('budgetLimit')}: {state.settings.currency} {group.budgetLimit})
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => removeCategoryGroup(group.id)}
-                className="text-sm text-rose-300 transition hover:text-rose-200"
-              >
-                {commonT('delete')}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingGroupId(group.id);
+                    setGroupName(group.name);
+                    setGroupLimit(group.budgetLimit);
+                  }}
+                  className="text-xs text-sky-300 hover:text-sky-200"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeCategoryGroup(group.id)}
+                  className="text-xs text-rose-300 transition hover:text-rose-200"
+                >
+                  {commonT('delete')}
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -315,6 +351,7 @@ export function SettingsForm() {
 
             setCategoryLoading(true);
             await addCategory({
+              id: editingCategoryId || undefined,
               name: categoryName.trim(),
               color: '#38bdf8',
               groupId: categoryGroupId || undefined,
@@ -323,34 +360,43 @@ export function SettingsForm() {
               fixedDay,
             });
             setCategoryName('');
+            setCategoryGroupId('');
             setIsFixed(false);
             setFixedAmount(0);
+            setFixedDay(1);
+            setEditingCategoryId(null);
             setCategoryLoading(false);
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              placeholder={t('categoryName')}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-            />
-            <select
-              value={categoryGroupId}
-              onChange={(e) => setCategoryGroupId(e.target.value)}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-            >
-              <option value="">{t('selectGroup')}</option>
-              {state.categoryGroups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+            <div className="grid gap-2">
+              <label className="text-xs text-slate-400 px-1">{t('categoryName')}</label>
+              <input
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                placeholder={t('categoryName')}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs text-slate-400 px-1">{t('macroCategories')}</label>
+              <select
+                value={categoryGroupId}
+                onChange={(e) => setCategoryGroupId(e.target.value)}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+              >
+                <option value="">{t('selectGroup')}</option>
+                {state.categoryGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-            <label className="flex flex-1 items-center gap-3 text-sm cursor-pointer">
+          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-end">
+            <label className="flex flex-1 items-center gap-3 text-sm cursor-pointer mb-2 sm:mb-0">
               <input
                 type="checkbox"
                 checked={isFixed}
@@ -360,34 +406,57 @@ export function SettingsForm() {
               {t('isFixed')}
             </label>
             {isFixed && (
-              <>
-                <input
-                  type="number"
-                  placeholder={t('fixedAmount')}
-                  value={fixedAmount}
-                  onChange={(e) => setFixedAmount(Number(e.target.value))}
-                  className="w-24 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Day"
-                  min="1"
-                  max="31"
-                  value={fixedDay}
-                  onChange={(e) => setFixedDay(Number(e.target.value))}
-                  className="w-16 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none"
-                />
-              </>
+              <div className="flex gap-3">
+                <div className="grid gap-1.5">
+                  <label className="text-[10px] text-slate-500 uppercase font-bold px-1">{t('fixedAmount')}</label>
+                  <input
+                    type="number"
+                    placeholder={t('fixedAmount')}
+                    value={fixedAmount}
+                    onChange={(e) => setFixedAmount(Number(e.target.value))}
+                    className="w-28 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none"
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <label className="text-[10px] text-slate-500 uppercase font-bold px-1">{t('fixedDay')}</label>
+                  <input
+                    type="number"
+                    placeholder="Day"
+                    min="1"
+                    max="31"
+                    value={fixedDay}
+                    onChange={(e) => setFixedDay(Number(e.target.value))}
+                    className="w-20 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none"
+                  />
+                </div>
+              </div>
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={categoryLoading}
-            className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 disabled:opacity-50"
-          >
-            {categoryLoading ? '...' : t('addCategory')}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={categoryLoading}
+              className="flex-1 rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 disabled:opacity-50"
+            >
+              {categoryLoading ? '...' : (editingCategoryId ? commonT('save') : t('addCategory'))}
+            </button>
+            {editingCategoryId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingCategoryId(null);
+                  setCategoryName('');
+                  setCategoryGroupId('');
+                  setIsFixed(false);
+                  setFixedAmount(0);
+                }}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-medium transition hover:bg-white/10"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </form>
 
         <div className="mt-5 grid gap-3">
@@ -411,18 +480,35 @@ export function SettingsForm() {
                   </div>
                   {category.isFixed && (
                     <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
-                      Fixed: {state.settings.currency} {category.fixedAmount} (Day {category.fixedDay})
+                      Fixed: {state.settings.currency} {category.fixedAmount} ({t('fixedDay')} {category.fixedDay})
                     </span>
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => removeCategory(category.id)}
-                  className="text-sm text-rose-300 transition hover:text-rose-200 self-end sm:self-auto"
-                >
-                  {commonT('delete')}
-                </button>
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCategoryId(category.id);
+                      setCategoryName(category.name);
+                      setCategoryGroupId(category.groupId || '');
+                      setIsFixed(!!category.isFixed);
+                      setFixedAmount(category.fixedAmount || 0);
+                      setFixedDay(category.fixedDay || 1);
+                      window.scrollTo({ top: 0, behavior: 'smooth' }); // Optional: Scroll up to focus on form
+                    }}
+                    className="text-xs text-sky-300 hover:text-sky-200"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeCategory(category.id)}
+                    className="text-xs text-rose-300 transition hover:text-rose-200"
+                  >
+                    {commonT('delete')}
+                  </button>
+                </div>
               </div>
             );
           })}

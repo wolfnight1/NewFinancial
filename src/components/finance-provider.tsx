@@ -15,7 +15,7 @@ import {
   getExpenses, 
   getCategories, 
   getCategoryGroups,
-  addCategory as dbAddCategory, 
+  upsertCategory as dbUpsertCategory, 
   removeCategory as dbRemoveCategory,
   upsertCategoryGroup as dbUpsertGroup,
   removeCategoryGroup as dbRemoveGroup,
@@ -92,7 +92,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         }
       },
       async addCategory(category) {
-        const res = await dbAddCategory(category);
+        const res = await dbUpsertCategory(category);
         if (res.success) {
           await refresh();
         } else {
