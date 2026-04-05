@@ -5,11 +5,16 @@ export function formatCurrency(
   locale: AppLocale,
   currency: string
 ) {
-  return new Intl.NumberFormat(locale === 'es' ? 'es-CO' : 'en-US', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);
+  try {
+    return new Intl.NumberFormat(locale === 'es' ? 'es-CO' : 'en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  } catch (error) {
+    console.error('Error formatting currency:', currency, error);
+    return `${currency || ''} ${Number(value || 0).toLocaleString()}`;
+  }
 }
 
 export function formatLongDate(value: string, locale: AppLocale) {
