@@ -48,10 +48,16 @@ export function DashboardScreen() {
     
     const monthlyTrend = buildTrendData(expenses, categories, groups, trendPeriod);
 
-    // Map of category/group names to their defined colors for the chart series
-    const seriesMetaData = { Otros: '#94a3b8' } as Record<string, string>;
-    groups.forEach(g => { if (g?.name) seriesMetaData[g.name] = g.color || '#94a3b8'; });
-    categories.forEach(c => { if (c?.name && !c.groupId) seriesMetaData[c.name] = c.color || '#94a3b8'; });
+    // Map of ALL category/group names to their defined colors for the chart series
+    const seriesMetaData = Object.create(null) as Record<string, string>;
+    seriesMetaData['Otros'] = '#94a3b8';
+
+    groups.forEach(g => { 
+      if (g?.name) seriesMetaData[g.name.trim()] = g.color || '#94a3b8'; 
+    });
+    categories.forEach(c => { 
+      if (c?.name) seriesMetaData[c.name.trim()] = c.color || '#94a3b8'; 
+    });
 
     // Extract all unique series names present in the data rows (excluding the 'label' key)
     const activeSeries: string[] = [];

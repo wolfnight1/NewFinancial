@@ -78,13 +78,11 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
   ];
 
   return categories
-    .map((category, index) => {
-      // For the visual breakdown, we always use the multi-color palette to ensure distinction
-      const displayColor = COLORS[index % COLORS.length];
+    .map((category) => {
       return {
         id: category.id,
         name: category.name,
-        color: displayColor,
+        color: category.color || '#94a3b8',
         amount: expenses
           .filter((expense) => expense.categoryId === category.id)
           .reduce((total, expense) => total + expense.amount, 0),
@@ -113,14 +111,11 @@ export function buildTrendData(
       const label = period === 'month' ? expense.date.slice(0, 7) : expense.date.slice(0, 4);
       
       const category = catList.find(c => c.id === expense.categoryId);
-      const group = groupList.find(g => g.id === category?.groupId);
-      
-      // Use label-safe group names
-      const seriesName = group ? group.name : (category ? category.name : 'Otros');
+      // Synchronize series names with the individual category names to match the Pie Chart
+      const seriesName = (category?.name || 'Otros').trim();
       const amount = Number(expense.amount) || 0;
 
       if (!buckets.has(label)) {
-        // Use a pure object to avoid prototype property collisions (like "toString")
         const newRow = Object.create(null);
         newRow.label = label;
         buckets.set(label, newRow);
@@ -131,7 +126,7 @@ export function buildTrendData(
     }
 
     return Array.from(buckets.values())
-      .sort((a, b) => (a.label || '').localeCompare(b.label || ''));
+      .sort((a: any, b: any) => (a.label || '').localeCompare(b.label || ''));
   } catch (error) {
     console.error('Critical error in buildTrendData:', error);
     return [];
