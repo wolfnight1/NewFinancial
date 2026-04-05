@@ -4,10 +4,21 @@ export type AppMode = 'individual' | 'couple';
 
 export type ExpenseOwner = 'user1' | 'user2' | 'shared';
 
+export type CategoryGroup = {
+  id: string;
+  name: string;
+  color: string;
+  budgetLimit: number;
+};
+
 export type Category = {
   id: string;
   name: string;
   color: string;
+  groupId?: string;
+  isFixed?: boolean;
+  fixedAmount?: number;
+  fixedDay?: number;
 };
 
 export type Expense = {
@@ -38,5 +49,6 @@ export type FinanceSettings = {
 export type FinanceState = {
   settings: FinanceSettings;
   categories: Category[];
+  categoryGroups: CategoryGroup[];
   expenses: Expense[];
 };

@@ -12,13 +12,18 @@ export function ExpenseForm() {
   const locale = useLocale() as AppLocale;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [form, setForm] = useState({
     owner: 'shared' as ExpenseOwner,
-    categoryId: state.categories[0]?.id ?? '',
+    categoryId: '',
     amount: '',
     date: new Date().toISOString().slice(0, 10),
     note: '',
   });
+
+  const filteredCategories = selectedGroupId 
+    ? state.categories.filter(c => c.groupId === selectedGroupId)
+    : state.categories;
 
   if (!hydrated) {
     return null;
@@ -65,22 +70,45 @@ export function ExpenseForm() {
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="grid gap-2">
+          <label className="text-sm text-slate-300">{useTranslations('settings')('macroCategories')}</label>
+          <select
+            value={selectedGroupId}
+            onChange={(event) => {
+              setSelectedGroupId(event.target.value);
+              setForm(current => ({ ...current, categoryId: '' }));
+            }}
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+          >
+            <option value="">{useTranslations('settings')('selectGroup')}</option>
+            {state.categoryGroups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid gap-2">
           <label className="text-sm text-slate-300">{t('category')}</label>
           <select
+            required
             value={form.categoryId}
             onChange={(event) =>
               setForm((current) => ({ ...current, categoryId: event.target.value }))
             }
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
           >
-            {state.categories.map((category) => (
+            <option value="">{t('category')}</option>
+            {filteredCategories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
           </select>
         </div>
+      </div>
 
+      <div className="grid gap-5 md:grid-cols-2">
         <div className="grid gap-2">
           <label className="text-sm text-slate-300">{t('amount')}</label>
           <input
@@ -96,9 +124,7 @@ export function ExpenseForm() {
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
           />
         </div>
-      </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
         <div className="grid gap-2">
           <label className="text-sm text-slate-300">{t('date')}</label>
           <input
@@ -111,18 +137,18 @@ export function ExpenseForm() {
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
           />
         </div>
+      </div>
 
-        <div className="grid gap-2">
-          <label className="text-sm text-slate-300">{t('description')}</label>
-          <input
-            type="text"
-            value={form.note}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, note: event.target.value }))
-            }
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
-          />
-        </div>
+      <div className="grid gap-2">
+        <label className="text-sm text-slate-300">{t('description')}</label>
+        <input
+          type="text"
+          value={form.note}
+          onChange={(event) =>
+            setForm((current) => ({ ...current, note: event.target.value }))
+          }
+          className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+        />
       </div>
 
       <button

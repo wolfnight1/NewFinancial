@@ -92,6 +92,17 @@
     "percentage": "Percentage (%)",
     "fixed": "Fixed amount",
     "investmentFixed": "Fixed monthly investment",
+    "macroCategories": "Macro Categories (Groups)",
+    "macroCategoriesHint": "Group your establishments to define monthly budget limits.",
+    "addMacroCategory": "New Macro Category",
+    "groupName": "Group name",
+    "budgetLimit": "Budget limit",
+    "establishments": "Establishments / Items",
+    "establishmentsHint": "Manage where you spend and configure fixed payments.",
+    "isFixed": "Automatic monthly payment",
+    "fixedAmount": "Monthly amount",
+    "fixedDay": "Due day (1-31)",
+    "selectGroup": "Select group...",
     "save": "Save changes"
   },
   "common": {

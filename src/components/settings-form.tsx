@@ -12,10 +12,19 @@ export function SettingsForm() {
   const commonT = useTranslations('common');
   const locale = useLocale() as AppLocale;
   const router = useRouter();
-  const { state, hydrated, updateSettings, addCategory, removeCategory } = useFinance();
+  const { state, hydrated, updateSettings, addCategory, removeCategory, upsertCategoryGroup, removeCategoryGroup } = useFinance();
   const [categoryName, setCategoryName] = useState('');
+  const [categoryGroupId, setCategoryGroupId] = useState('');
+  const [isFixed, setIsFixed] = useState(false);
+  const [fixedAmount, setFixedAmount] = useState(0);
+  const [fixedDay, setFixedDay] = useState(1);
+  
+  const [groupName, setGroupName] = useState('');
+  const [groupLimit, setGroupLimit] = useState(0);
+
   const [loading, setLoading] = useState(false);
   const [categoryLoading, setCategoryLoading] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
   const [form, setForm] = useState<FinanceSettings>(state.settings);
 
   if (!hydrated) {
@@ -221,68 +230,202 @@ export function SettingsForm() {
 
       <HouseholdSection />
 
+      {/* Macro Categories Section */}
       <section className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
         <div className="mb-5">
-          <h2 className="text-lg font-semibold">{t('categories')}</h2>
-          <p className="text-sm text-slate-400">{t('categoriesHint')}</p>
+          <h2 className="text-lg font-semibold">{t('macroCategories')}</h2>
+          <p className="text-sm text-slate-400">{t('macroCategoriesHint')}</p>
         </div>
 
         <form
-          className="flex flex-col gap-3 sm:flex-row"
+          className="grid gap-3 sm:grid-cols-3"
           onSubmit={async (event) => {
             event.preventDefault();
+            if (!groupName.trim() || groupLoading) return;
 
-            if (!categoryName.trim() || categoryLoading) {
-              return;
-            }
-
-            setCategoryLoading(true);
-            await addCategory({
-              name: categoryName.trim(),
-              color: '#38bdf8',
+            setGroupLoading(true);
+            await upsertCategoryGroup({
+              name: groupName.trim(),
+              color: '#607D8B',
+              budgetLimit: groupLimit,
             });
-            setCategoryName('');
-            setCategoryLoading(false);
+            setGroupName('');
+            setGroupLimit(0);
+            setGroupLoading(false);
           }}
         >
           <input
-            value={categoryName}
-            onChange={(event) => setCategoryName(event.target.value)}
-            placeholder={t('categoryName')}
-            className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder={t('groupName')}
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+          />
+          <input
+            type="number"
+            value={groupLimit}
+            onChange={(e) => setGroupLimit(Number(e.target.value))}
+            placeholder={t('budgetLimit')}
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
           />
           <button
             type="submit"
-            disabled={categoryLoading}
-            className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:opacity-50"
+            disabled={groupLoading}
+            className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/10 disabled:opacity-50"
           >
-            {categoryLoading ? '...' : t('addCategory')}
+            {groupLoading ? '...' : t('addMacroCategory')}
           </button>
         </form>
 
         <div className="mt-5 grid gap-3">
-          {state.categories.map((category) => (
+          {state.categoryGroups.map((group) => (
             <div
-              key={category.id}
+              key={group.id}
               className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="size-3 rounded-full"
-                  style={{ backgroundColor: category.color }}
-                />
-                <span>{category.name}</span>
+                <span className="text-sm font-medium">{group.name}</span>
+                <span className="text-xs text-slate-400">
+                  (Limit: {state.settings.currency} {group.budgetLimit})
+                </span>
               </div>
-
               <button
                 type="button"
-                onClick={() => removeCategory(category.id)}
+                onClick={() => removeCategoryGroup(group.id)}
                 className="text-sm text-rose-300 transition hover:text-rose-200"
               >
                 {commonT('delete')}
               </button>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Establishments Section */}
+      <section className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
+        <div className="mb-5">
+          <h2 className="text-lg font-semibold">{t('establishments')}</h2>
+          <p className="text-sm text-slate-400">{t('establishmentsHint')}</p>
+        </div>
+
+        <form
+          className="grid gap-4"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (!categoryName.trim() || categoryLoading) return;
+
+            setCategoryLoading(true);
+            await addCategory({
+              name: categoryName.trim(),
+              color: '#38bdf8',
+              groupId: categoryGroupId || undefined,
+              isFixed,
+              fixedAmount,
+              fixedDay,
+            });
+            setCategoryName('');
+            setIsFixed(false);
+            setFixedAmount(0);
+            setCategoryLoading(false);
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              placeholder={t('categoryName')}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+            />
+            <select
+              value={categoryGroupId}
+              onChange={(e) => setCategoryGroupId(e.target.value)}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition focus:border-sky-300"
+            >
+              <option value="">{t('selectGroup')}</option>
+              {state.categoryGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <label className="flex flex-1 items-center gap-3 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isFixed}
+                onChange={(e) => setIsFixed(e.target.checked)}
+                className="size-4 accent-sky-400"
+              />
+              {t('isFixed')}
+            </label>
+            {isFixed && (
+              <>
+                <input
+                  type="number"
+                  placeholder={t('fixedAmount')}
+                  value={fixedAmount}
+                  onChange={(e) => setFixedAmount(Number(e.target.value))}
+                  className="w-24 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none"
+                />
+                <input
+                  type="number"
+                  placeholder="Day"
+                  min="1"
+                  max="31"
+                  value={fixedDay}
+                  onChange={(e) => setFixedDay(Number(e.target.value))}
+                  className="w-16 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none"
+                />
+              </>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={categoryLoading}
+            className="rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200 disabled:opacity-50"
+          >
+            {categoryLoading ? '...' : t('addCategory')}
+          </button>
+        </form>
+
+        <div className="mt-5 grid gap-3">
+          {state.categories.map((category) => {
+            const group = state.categoryGroups.find((g) => g.id === category.groupId);
+            return (
+              <div
+                key={category.id}
+                className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="size-3 rounded-full"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{category.name}</span>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                      {group?.name || 'No Group'}
+                    </span>
+                  </div>
+                  {category.isFixed && (
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
+                      Fixed: {state.settings.currency} {category.fixedAmount} (Day {category.fixedDay})
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeCategory(category.id)}
+                  className="text-sm text-rose-300 transition hover:text-rose-200 self-end sm:self-auto"
+                >
+                  {commonT('delete')}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

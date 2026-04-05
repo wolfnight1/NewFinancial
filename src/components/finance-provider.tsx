@@ -9,8 +9,18 @@ import {
   type ReactNode,
 } from 'react';
 import { DEFAULT_STATE } from '@/lib/demo-data';
-import type { Category, Expense, FinanceSettings, FinanceState } from '@/lib/types';
-import { addExpense as dbAddExpense, getExpenses, getCategories, addCategory as dbAddCategory, removeCategory as dbRemoveCategory } from '@/lib/server/finance-actions';
+import type { Category, CategoryGroup, Expense, FinanceSettings, FinanceState } from '@/lib/types';
+import { 
+  addExpense as dbAddExpense, 
+  getExpenses, 
+  getCategories, 
+  getCategoryGroups,
+  addCategory as dbAddCategory, 
+  removeCategory as dbRemoveCategory,
+  upsertCategoryGroup as dbUpsertGroup,
+  removeCategoryGroup as dbRemoveGroup,
+  checkAndInsertFixedExpenses as dbCheckFixed 
+} from '@/lib/server/finance-actions';
 import { getFinanceSettings, updateHouseholdSettings } from '@/lib/server/settings-actions';
 
 type FinanceContextValue = {
@@ -18,8 +28,10 @@ type FinanceContextValue = {
   hydrated: boolean;
   addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
   updateSettings: (settings: FinanceSettings) => Promise<void>;
-  addCategory: (category: { name: string; color: string }) => Promise<void>;
+  addCategory: (category: Partial<Category>) => Promise<void>;
   removeCategory: (categoryId: string) => Promise<void>;
+  upsertCategoryGroup: (group: Partial<CategoryGroup>) => Promise<void>;
+  removeCategoryGroup: (groupId: string) => Promise<void>;
   refresh: () => Promise<void>;
 };
 
@@ -32,15 +44,20 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // Load initial data from Supabase
   const refresh = async () => {
     try {
-      const [settings, categories, expenses] = await Promise.all([
+      // Run auto-check for fixed expenses
+      await dbCheckFixed();
+
+      const [settings, categories, groups, expenses] = await Promise.all([
         getFinanceSettings(),
         getCategories(),
+        getCategoryGroups(),
         getExpenses()
       ]);
 
       setState({
         settings: settings || DEFAULT_STATE.settings,
         categories: categories.length > 0 ? categories : DEFAULT_STATE.categories,
+        categoryGroups: groups.length > 0 ? groups : DEFAULT_STATE.categoryGroups,
         expenses: expenses
       });
     } catch (error) {
@@ -88,6 +105,22 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           await refresh();
         } else {
           alert(res.error || 'Error al eliminar categoría');
+        }
+      },
+      async upsertCategoryGroup(group) {
+        const res = await dbUpsertGroup(group);
+        if (res.success) {
+          await refresh();
+        } else {
+          alert(res.error || 'Error al guardar grupo');
+        }
+      },
+      async removeCategoryGroup(groupId) {
+        const res = await dbRemoveGroup(groupId);
+        if (res.success) {
+          await refresh();
+        } else {
+          alert(res.error || 'Error al eliminar grupo');
         }
       },
       refresh

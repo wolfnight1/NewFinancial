@@ -1,4 +1,4 @@
-import type { Category, Expense, ExpenseOwner, FinanceSettings } from '@/lib/types';
+import type { Category, CategoryGroup, Expense, ExpenseOwner, FinanceSettings } from '@/lib/types';
 
 type Summary = {
   totalIncome: number;
@@ -78,4 +78,25 @@ export function buildMonthlyTrend(expenses: Expense[]) {
       month,
       expenses: amount,
     }));
+}
+
+export function buildGroupBreakdown(expenses: Expense[], categories: Category[], groups: CategoryGroup[]) {
+  return groups.map(group => {
+    const groupCategoryIds = new Set(
+      categories.filter(c => c.groupId === group.id).map(c => c.id)
+    );
+
+    const spent = expenses
+      .filter(e => groupCategoryIds.has(e.categoryId))
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    return {
+      id: group.id,
+      name: group.name,
+      color: group.color,
+      limit: group.budgetLimit,
+      spent,
+      percent: group.budgetLimit > 0 ? (spent / group.budgetLimit) * 100 : 0
+    };
+  }).sort((a, b) => b.spent - a.spent);
 }

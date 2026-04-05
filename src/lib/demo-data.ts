@@ -26,6 +26,10 @@ export const DEFAULT_STATE: FinanceState = {
     { id: 'cat-hydro', name: 'Toronto Hydro -Electricidad', color: '#FFEB3B' },
     { id: 'cat-amazon', name: 'Amazon', color: '#FF9900' },
   ],
+  categoryGroups: [
+    { id: 'group-gen', name: 'General', color: '#607D8B', budgetLimit: 0 },
+    { id: 'group-merc', name: 'Mercado', color: '#4CAF50', budgetLimit: 500 },
+  ],
   expenses: [
     {
       id: 'exp-1',

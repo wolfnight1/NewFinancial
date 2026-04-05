@@ -92,6 +92,17 @@
     "percentage": "Porcentaje (%)",
     "fixed": "Monto fijo",
     "investmentFixed": "Inversión mensual fija",
+    "macroCategories": "Categorías Macro (Grupos)",
+    "macroCategoriesHint": "Agrupa tus establecimientos para definir límites de presupuesto mensuales.",
+    "addMacroCategory": "Nueva Categoría Macro",
+    "groupName": "Nombre del grupo",
+    "budgetLimit": "Límite de presupuesto",
+    "establishments": "Establecimientos / Ítems",
+    "establishmentsHint": "Gestiona los lugares donde gastas y configura tus pagos fijos.",
+    "isFixed": "Pago mensual automático",
+    "fixedAmount": "Monto mensual",
+    "fixedDay": "Día de cobro (1-31)",
+    "selectGroup": "Seleccionar grupo...",
     "save": "Guardar cambios"
   },
   "common": {

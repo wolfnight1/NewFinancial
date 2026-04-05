@@ -18,6 +18,7 @@ import {
   buildCategoryBreakdown,
   buildDashboardSummary,
   buildMonthlyTrend,
+  buildGroupBreakdown,
 } from '@/lib/dashboard';
 import { formatCurrency, formatLongDate } from '@/lib/format';
 import type { AppLocale, ExpenseOwner } from '@/lib/types';
@@ -34,6 +35,7 @@ export function DashboardScreen() {
 
   const summary = buildDashboardSummary(state.settings, state.expenses);
   const categoryBreakdown = buildCategoryBreakdown(state.expenses, state.categories);
+  const groupBreakdown = buildGroupBreakdown(state.expenses, state.categories, state.categoryGroups);
   const monthlyTrend = buildMonthlyTrend(state.expenses);
   const ownerLabels: Record<ExpenseOwner, string> = {
     user1: state.settings.primaryUserName,
@@ -149,6 +151,37 @@ export function DashboardScreen() {
           </div>
         </article>
       </div>
+
+      {/* Budget Progress Section */}
+      <section className="mb-6 rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
+        <h2 className="text-lg font-semibold mb-5">{useTranslations('settings')('macroCategories')} - {t('balance')}</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {groupBreakdown.map((group) => {
+            const isOverBudget = group.limit > 0 && group.spent > group.limit;
+            return (
+              <div key={group.id} className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-200">{group.name}</span>
+                  <span className={isOverBudget ? 'text-rose-400 font-bold' : 'text-slate-400'}>
+                    {formatCurrency(group.spent, locale, state.settings.currency)} 
+                    {group.limit > 0 && ` / ${formatCurrency(group.limit, locale, state.settings.currency)}`}
+                  </span>
+                </div>
+                {group.limit > 0 && (
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+                    <div 
+                      className={`h-full transition-all duration-500 rounded-full ${
+                        isOverBudget ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' : 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.4)]'
+                      }`}
+                      style={{ width: `${Math.min(group.percent, 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <article className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
