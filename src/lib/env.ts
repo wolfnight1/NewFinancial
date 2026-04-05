@@ -8,7 +8,13 @@ export function hasSupabaseEnv() {
 export function getRequiredEnv(
   name: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
 ) {
-  const value = process.env[name];
+  let value: string | undefined;
+
+  if (name === 'NEXT_PUBLIC_SUPABASE_URL') {
+    value = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  } else if (name === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
+    value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  }
 
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
