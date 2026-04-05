@@ -121,6 +121,32 @@ BEGIN
   INSERT INTO public.household_members (household_id, user_id, role)
   VALUES (new_household_id, new.id, 'user1');
 
+  -- 4. Create default categories
+  INSERT INTO public.categories (household_id, name, color, is_default)
+  VALUES 
+    (new_household_id, 'UBER', '#000000', true),
+    (new_household_id, 'Costco', '#E31837', true),
+    (new_household_id, 'Chinatown', '#FFD700', true),
+    (new_household_id, 'Walmart', '#0071CE', true),
+    (new_household_id, 'Nofrills', '#FFFF00', true),
+    (new_household_id, 'Fresco', '#4CAF50', true),
+    (new_household_id, 'Dollarama', '#008000', true),
+    (new_household_id, 'Shoppers', '#ED1C24', true),
+    (new_household_id, 'Restaurantes', '#FF5722', true),
+    (new_household_id, 'Salidas', '#9C27B0', true),
+    (new_household_id, 'Gasolina', '#795548', true),
+    (new_household_id, 'Tim Hortons / Starbucks', '#4E342E', true),
+    (new_household_id, 'Parking', '#607D8B', true),
+    (new_household_id, 'Amazon', '#FF9900', true),
+    (new_household_id, 'Otros no Contemplados', '#9E9E9E', true),
+    (new_household_id, 'Gastos', '#F44336', true),
+    (new_household_id, 'Enbridge', '#005696', true),
+    (new_household_id, 'Toronto Hydro -Electricidad', '#FFEB3B', true),
+    (new_household_id, 'Telecom -Internet Hogar', '#2196F3', true),
+    (new_household_id, 'Freedom -Celulares', '#00BCD4', true),
+    (new_household_id, 'Renta -Hogar', '#3F51B5', true),
+    (new_household_id, 'insurance', '#673AB7', true);
+
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
