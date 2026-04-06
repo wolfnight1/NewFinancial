@@ -9,7 +9,8 @@ export function formatCurrency(
     return new Intl.NumberFormat(locale === 'es' ? 'es-CO' : 'en-US', {
       style: 'currency',
       currency: currency || 'USD',
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(value || 0);
   } catch (error) {
     console.error('Error formatting currency:', currency, error);
