@@ -262,6 +262,18 @@ export function DashboardScreen() {
                   </span>
                 </div>
               ))}
+              {categoryBreakdown.length > 0 && (
+                <div className="mt-2 pt-3 flex items-center justify-between text-sm font-semibold border-t border-white/10">
+                  <span>{t('totalExpenses')}</span>
+                  <span className="text-slate-200">
+                    {formatCurrency(
+                      categoryBreakdown.reduce((sum: number, entry: any) => sum + entry.amount, 0),
+                      locale,
+                      state.settings.currency
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
           </article>
         </div>

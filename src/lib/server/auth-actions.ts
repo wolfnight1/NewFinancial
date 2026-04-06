@@ -32,3 +32,17 @@ export async function signInWithGoogle(formData: FormData) {
 
   redirect(data.url);
 }
+
+export async function signOutAction(formData?: FormData) {
+  let locale = 'es';
+  if (formData) {
+    locale = String(formData.get('locale') ?? 'es');
+  }
+
+  if (hasSupabaseEnv()) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  }
+
+  redirect(`/${locale}`);
+}

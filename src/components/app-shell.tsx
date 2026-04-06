@@ -2,9 +2,11 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { Landmark, LayoutDashboard, List, Settings, Wallet } from 'lucide-react';
-import { Link, usePathname } from '@/i18n/routing';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import type { AppLocale } from '@/lib/types';
+import { createClient } from '@/lib/supabase-browser';
+import { hasSupabaseEnv } from '@/lib/env';
 
 const NAV_ITEMS = [
   { href: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
@@ -26,6 +28,16 @@ export function AppShell({
   const appT = useTranslations('app');
   const locale = useLocale() as AppLocale;
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    if (hasSupabaseEnv()) {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    }
+    router.push('/');
+    router.refresh();
+  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_32%),linear-gradient(180deg,_#08111f_0%,_#0f172a_48%,_#172033_100%)] text-slate-50">
@@ -50,13 +62,12 @@ export function AppShell({
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <Link
-              href="/"
-              locale={locale}
-              className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+            <button
+              onClick={handleSignOut}
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white cursor-pointer"
             >
               {t('logout')}
-            </Link>
+            </button>
           </div>
         </header>
 
