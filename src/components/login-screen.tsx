@@ -5,6 +5,8 @@ import { Landmark, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 export function LoginScreen() {
   const t = useTranslations('login');
@@ -16,16 +18,25 @@ export function LoginScreen() {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
+      const isNative = Capacitor.isNativePlatform();
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
+          skipBrowserRedirect: isNative,
           redirectTo: `${window.location.origin}/${locale}/auth/callback`,
         },
       });
 
       if (error) {
         console.error('Error logging in:', error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (isNative && data?.url) {
+        await Browser.open({ url: data.url });
         setLoading(false);
       }
     } catch (err) {

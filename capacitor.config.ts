@@ -12,11 +12,7 @@ const config: CapacitorConfig = {
     cleartext: true,
     androidScheme: 'https',
     allowNavigation: [
-      'new-financial-one.vercel.app',
-      '*.google.com',
-      '*.googleapis.com',
-      '*.supabase.co',
-      'accounts.google.com',
+      'new-financial-one.vercel.app'
     ]
   }
 };
