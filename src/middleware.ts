@@ -40,17 +40,18 @@ export async function middleware(request: NextRequest) {
   // Exclude auth routes and public assets
   const isAuthRoute = pathname.includes('/login') || pathname.includes('/auth/');
   const isPublicAsset = pathname.match(/\.(.*)$/) || pathname === '/favicon.ico';
+  const isRootRoute = pathname === '/' || pathname === '/es' || pathname === '/en';
   
-  if (!user && !isAuthRoute && !isPublicAsset) {
+  if (!user && !isAuthRoute && !isPublicAsset && !isRootRoute) {
     // If not logged in and trying to access a protected route, redirect to login
-    // We need to keep the locale in the redirect URL
+    // We let them view the root route (landing page) if not logged in.
     const locale = pathname.split('/')[1] || routing.defaultLocale;
     const loginUrl = new URL(`/${locale}/login`, request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (user && isAuthRoute) {
-    // If logged in and trying to access login, redirect to dashboard
+  if (user && (isAuthRoute || isRootRoute)) {
+    // If logged in and trying to access login OR the landing page, redirect to dashboard
     const locale = pathname.split('/')[1] || routing.defaultLocale;
     const dashboardUrl = new URL(`/${locale}/dashboard`, request.url);
     return NextResponse.redirect(dashboardUrl);
