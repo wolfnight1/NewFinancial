@@ -14,11 +14,6 @@ const config: CapacitorConfig = {
     allowNavigation: [
       'new-financial-one.vercel.app'
     ]
-  },
-  plugins: {
-    CapacitorCookies: {
-      enabled: true,
-    },
   }
 };
 
