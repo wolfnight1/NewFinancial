@@ -53,13 +53,11 @@ export function buildDashboardSummary(
     return total + expense.amount;
   }, 0);
 
-  const netIncome = totalIncome - totalInvestment;
-
   return {
-    totalIncome: netIncome,
+    totalIncome,
     totalExpenses,
     totalInvestment,
-    balance: netIncome - totalExpenses,
+    balance: totalIncome - totalExpenses - totalInvestment,
     byOwner,
   };
 }
