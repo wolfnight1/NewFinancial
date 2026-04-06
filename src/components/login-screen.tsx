@@ -4,9 +4,10 @@ import { useTranslations } from 'next-intl';
 import { Landmark, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase-browser';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import { App as CapacitorApp } from '@capacitor/app';
 
 export function LoginScreen() {
   const t = useTranslations('login');
@@ -14,6 +15,19 @@ export function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const params = useParams();
   const locale = params?.locale as string ?? 'es';
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const subscription = CapacitorApp.addListener('appUrlOpen', (event) => {
+        if (event.url.includes('/auth/callback')) {
+          window.location.href = event.url;
+        }
+      });
+      return () => {
+        subscription.then(sub => sub.remove());
+      };
+    }
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
