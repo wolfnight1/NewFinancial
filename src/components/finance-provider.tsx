@@ -69,8 +69,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
     // Run auto-check for fixed expenses SILENTLY after initial load
     // This prevents revalidation conflicts during the critical mount
-    const timer = setTimeout(() => {
-      dbCheckFixed().catch(err => console.error('Silent fix check failed:', err));
+    const timer = setTimeout(async () => {
+      try {
+        await dbCheckFixed();
+        await refresh();
+      } catch (err) {
+        console.error('Silent fix check failed:', err);
+      }
     }, 2000);
 
     return () => clearTimeout(timer);
