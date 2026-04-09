@@ -81,12 +81,12 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
   // Sort categories by amount to assign colors predictably based on spending rank
   const breakdown = categories
     .map((category) => {
+      const filtered = expenses.filter((expense) => expense.categoryId === category.id);
       return {
         id: category.id,
         name: (category.name || '').trim(),
-        amount: expenses
-          .filter((expense) => expense.categoryId === category.id)
-          .reduce((total, expense) => total + expense.amount, 0),
+        amount: filtered.reduce((total, expense) => total + expense.amount, 0),
+        count: filtered.length, // Frequency of this record in the month
       };
     })
     .filter((item) => item.amount > 0)

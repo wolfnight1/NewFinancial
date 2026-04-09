@@ -34,6 +34,7 @@ export function DashboardScreen() {
 
   const [trendPeriod, setTrendPeriod] = useState<'month' | 'year'>('month');
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   if (!hydrated || !state.settings) {
     return <LoadingCard label={commonT('loading')} />;
@@ -193,15 +194,11 @@ export function DashboardScreen() {
                   <YAxis stroke="#94a3b8" fontSize={12} />
                   <Tooltip
                     cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                    contentStyle={{ 
-                      backgroundColor: '#0f172a', 
-                      borderColor: 'rgba(255, 255, 255, 0.1)', 
-                      borderRadius: '16px',
-                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)'
-                    }}
-                    itemStyle={{ fontSize: '12px' }}
-                    formatter={(value: number) =>
-                      formatCurrency(value, locale, state.settings.currency)
+                    content={
+                      <CustomChartTooltip 
+                        currency={state.settings.currency} 
+                        locale={locale} 
+                      />
                     }
                   />
                   {activeSeries.map((seriesName) => (
@@ -240,8 +237,11 @@ export function DashboardScreen() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) =>
-                      formatCurrency(value, locale, state.settings.currency)
+                    content={
+                      <CustomChartTooltip 
+                        currency={state.settings.currency} 
+                        locale={locale} 
+                      />
                     }
                   />
                 </PieChart>
@@ -249,15 +249,30 @@ export function DashboardScreen() {
             </div>
             <div className="grid gap-3">
               {categoryBreakdown.map((entry: any) => (
-                <div key={entry.id} className="flex items-center justify-between text-sm">
+                <div 
+                  key={entry.id} 
+                  onClick={() => setSelectedCategoryId(selectedCategoryId === entry.id ? null : entry.id)}
+                  className={`flex items-center justify-between text-sm p-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                    selectedCategoryId === entry.id ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'
+                  }`}
+                >
                   <div className="flex items-center gap-3">
                     <span
-                      className="size-3 rounded-full"
+                      className={`size-3 rounded-full transition-transform duration-300 ${selectedCategoryId === entry.id ? 'scale-125 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''}`}
                       style={{ backgroundColor: entry.color }}
                     />
-                    <span>{entry.name}</span>
+                    <div className="flex flex-col">
+                      <span className={selectedCategoryId === entry.id ? 'font-semibold text-white' : ''}>
+                        {entry.name}
+                      </span>
+                      {selectedCategoryId === entry.id && (
+                        <span className="text-[10px] text-sky-300 animate-in fade-in slide-in-from-left-1">
+                          {entry.count} {entry.count === 1 ? 'registro' : 'registros'} este mes
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-slate-300">
+                  <span className={`text-slate-300 ${selectedCategoryId === entry.id ? 'font-bold text-sky-200' : ''}`}>
                     {formatCurrency(entry.amount, locale, state.settings.currency)}
                   </span>
                 </div>
@@ -375,6 +390,35 @@ export function DashboardScreen() {
     console.error('Critical Dashboard Render Error:', error);
     return <LoadingCard label="Hubo un error al cargar tus datos. Por favor revisa tu configuración." />;
   }
+}
+
+function CustomChartTooltip({ active, payload, label, currency, locale }: any) {
+  if (active && payload && payload.length) {
+    // If it's a Pie chart, label might be undefined but name is in payload
+    const title = label || payload[0].payload?.name || payload[0].name;
+
+    return (
+      <div className="max-h-64 overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-md scrollbar-hide select-none transition-all duration-300">
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+          {title}
+        </p>
+        <div className="space-y-2.5">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-6 text-[11px]">
+              <div className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+                <span className="text-slate-300">{entry.name}:</span>
+              </div>
+              <span className="font-bold text-white">
+                {formatCurrency(entry.value, locale, currency)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
 }
 
 function LoadingCard({ label }: { label: string }) {
