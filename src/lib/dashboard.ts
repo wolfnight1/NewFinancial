@@ -86,7 +86,8 @@ export function buildCategoryBreakdown(expenses: Expense[], categories: Category
         id: category.id,
         name: (category.name || '').trim(),
         amount: filtered.reduce((total, expense) => total + expense.amount, 0),
-        count: filtered.length, // Frequency of this record in the month
+        count: filtered.length,
+        registrations: filtered.map(e => e.amount), // List of individual amounts
       };
     })
     .filter((item) => item.amount > 0)

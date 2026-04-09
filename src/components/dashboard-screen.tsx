@@ -266,9 +266,19 @@ export function DashboardScreen() {
                         {entry.name}
                       </span>
                       {selectedCategoryId === entry.id && (
-                        <span className="text-[10px] text-sky-300 animate-in fade-in slide-in-from-left-1">
-                          {entry.count} {entry.count === 1 ? 'registro' : 'registros'} este mes
-                        </span>
+                        <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1">
+                          <span className="text-[10px] text-sky-300 block mb-2">
+                            {entry.count} {entry.count === 1 ? 'registro' : 'registros'} este mes:
+                          </span>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                            {entry.registrations?.map((amt: number, i: number) => (
+                              <div key={i} className="flex items-center gap-2 text-[11px] text-slate-400">
+                                <span className="font-medium text-slate-500">{i + 1}.</span>
+                                <span>{formatCurrency(amt, locale, state.settings.currency)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
