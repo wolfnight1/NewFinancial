@@ -249,13 +249,33 @@ export async function upsertCategory(category: Partial<Category>) {
     return { error: `Ya existe un establecimiento llamado "${category.name}". Por favor usa un nombre diferente.` };
   }
 
-  const { error } = category.id
-    ? await supabase.from('categories').update(payload).eq('id', category.id)
-    : await supabase.from('categories').insert(payload);
+  if (category.id) {
+    // UPDATE EXISTING
+    const { data: updated, error: updateError } = await supabase
+      .from('categories')
+      .update(payload)
+      .eq('id', category.id)
+      .eq('household_id', member.household_id)
+      .select();
 
-  if (error) {
-    console.error('Error upserting category:', error);
-    return { error: `Error DB: ${error.message} (${error.code})` };
+    if (updateError) {
+      console.error('Error updating category:', updateError);
+      return { error: `Error al actualizar: ${updateError.message}` };
+    }
+
+    if (!updated || updated.length === 0) {
+      return { error: 'No se encontró el establecimiento original para actualizar.' };
+    }
+  } else {
+    // INSERT NEW
+    const { error: insertError } = await supabase
+      .from('categories')
+      .insert(payload);
+
+    if (insertError) {
+      console.error('Error inserting category:', insertError);
+      return { error: `Error al crear: ${insertError.message}` };
+    }
   }
 
   revalidatePath('/', 'layout');
@@ -297,13 +317,33 @@ export async function upsertCategoryGroup(group: Partial<CategoryGroup>) {
     return { error: `Ya existe un grupo llamado "${group.name}". Por favor usa un nombre diferente.` };
   }
 
-  const { error } = group.id 
-    ? await supabase.from('category_groups').update(payload).eq('id', group.id)
-    : await supabase.from('category_groups').insert(payload);
+  if (group.id) {
+    // UPDATE EXISTING
+    const { data: updated, error: updateError } = await supabase
+      .from('category_groups')
+      .update(payload)
+      .eq('id', group.id)
+      .eq('household_id', member.household_id)
+      .select();
 
-  if (error) {
-    console.error('Error upserting group:', error);
-    return { error: `Error DB: ${error.message} (${error.code})` };
+    if (updateError) {
+      console.error('Error updating group:', updateError);
+      return { error: `Error al actualizar: ${updateError.message}` };
+    }
+
+    if (!updated || updated.length === 0) {
+      return { error: 'No se encontró el grupo original para actualizar.' };
+    }
+  } else {
+    // INSERT NEW
+    const { error: insertError } = await supabase
+      .from('category_groups')
+      .insert(payload);
+
+    if (insertError) {
+      console.error('Error inserting group:', insertError);
+      return { error: `Error al crear: ${insertError.message}` };
+    }
   }
 
   revalidatePath('/', 'layout');
