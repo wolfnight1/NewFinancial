@@ -288,6 +288,7 @@ export async function upsertCategoryGroup(group: Partial<CategoryGroup>) {
 
 /**
  * Removes a category
+ * Moves associated expenses to a "General" category first to prevent data loss.
  */
 export async function removeCategory(id: string) {
   const supabase = await createClient();
@@ -303,6 +304,64 @@ export async function removeCategory(id: string) {
 
   if (!member) return { error: 'No household found' };
 
+  // 1. Ensure "General" category exists
+  let { data: generalCategory } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('household_id', member.household_id)
+    .eq('name', 'General')
+    .maybeSingle();
+
+  if (!generalCategory) {
+    // Attempt to find "Otros no Contemplados" as a secondary fallback if user preferred it before
+    const { data: fallbackCat } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('household_id', member.household_id)
+      .eq('name', 'Otros no Contemplados')
+      .maybeSingle();
+    
+    if (fallbackCat) {
+      generalCategory = fallbackCat;
+    } else {
+      // Create it from scratch
+      const { data: newCat, error: createError } = await supabase
+        .from('categories')
+        .insert({
+          household_id: member.household_id,
+          name: 'General',
+          color: '#9E9E9E',
+          is_default: true
+        })
+        .select('id')
+        .single();
+      
+      if (createError) {
+        console.error('Error creating General category:', createError);
+        return { error: 'No se pudo crear la categoría General para el respaldo' };
+      }
+      generalCategory = newCat;
+    }
+  }
+
+  // Prevent deleting the General category itself if it is the only one left or system critical
+  if (id === generalCategory?.id) {
+    return { error: 'No puedes eliminar la categoría General de respaldo' };
+  }
+
+  // 2. Move expenses to the General category
+  const { error: moveError } = await supabase
+    .from('expenses')
+    .update({ category_id: generalCategory.id })
+    .eq('category_id', id)
+    .eq('household_id', member.household_id);
+
+  if (moveError) {
+    console.error('Error moving expenses before deletion:', moveError);
+    return { error: 'No se pudieron mover los gastos a la categoría General' };
+  }
+
+  // 3. Finally, delete the category
   const { error } = await supabase
     .from('categories')
     .delete()
@@ -320,6 +379,7 @@ export async function removeCategory(id: string) {
 
 /**
  * Removes a category group
+ * Ungroups associated categories before deleting the group.
  */
 export async function removeCategoryGroup(id: string) {
   const supabase = await createClient();
@@ -335,6 +395,19 @@ export async function removeCategoryGroup(id: string) {
 
   if (!member) return { error: 'No household found' };
 
+  // 1. Ungroup categories belonging to this group
+  const { error: ungroupError } = await supabase
+    .from('categories')
+    .update({ group_id: null })
+    .eq('group_id', id)
+    .eq('household_id', member.household_id);
+
+  if (ungroupError) {
+    console.error('Error ungrouping categories before deleting group:', ungroupError);
+    return { error: 'No se pudieron desvincular los establecimientos del grupo' };
+  }
+
+  // 2. Delete the group
   const { error } = await supabase
     .from('category_groups')
     .delete()

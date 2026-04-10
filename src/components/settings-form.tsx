@@ -395,7 +395,11 @@ export function SettingsForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => removeCategoryGroup(group.id)}
+                  onClick={() => {
+                    if (window.confirm('¿Seguro que quieres eliminar este grupo? Los establecimientos vinculados perderán su grupo pero no se borrarán.')) {
+                      removeCategoryGroup(group.id);
+                    }
+                  }}
                   className="text-xs text-rose-300 transition hover:text-rose-200"
                 >
                   {commonT('delete')}
@@ -574,7 +578,11 @@ export function SettingsForm() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => removeCategory(category.id)}
+                    onClick={() => {
+                      if (window.confirm('¿Seguro que quieres eliminar este establecimiento? Los gastos asociados se moverán a la categoría "General" para no perder el historial.')) {
+                        removeCategory(category.id);
+                      }
+                    }}
                     className="text-xs text-rose-300 transition hover:text-rose-200"
                   >
                     {commonT('delete')}
