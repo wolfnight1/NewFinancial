@@ -236,6 +236,18 @@ export async function upsertCategory(category: Partial<Category>) {
     fixed_amount: category.fixedAmount || 0,
     fixed_day: category.fixedDay || 1
   };
+  
+  // DUPLICATE CHECK: Prevent creating/renaming to an existing establishment name
+  const { data: existing } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('household_id', member.household_id)
+    .ilike('name', category.name?.trim() || '')
+    .maybeSingle();
+
+  if (existing && existing.id !== category.id) {
+    return { error: `Ya existe un establecimiento llamado "${category.name}". Por favor usa un nombre diferente.` };
+  }
 
   const { error } = category.id
     ? await supabase.from('categories').update(payload).eq('id', category.id)
@@ -272,6 +284,18 @@ export async function upsertCategoryGroup(group: Partial<CategoryGroup>) {
     color: group.color,
     budget_limit: group.budgetLimit
   };
+
+  // DUPLICATE CHECK: Prevent creating/renaming to an existing group name
+  const { data: existing } = await supabase
+    .from('category_groups')
+    .select('id')
+    .eq('household_id', member.household_id)
+    .ilike('name', group.name?.trim() || '')
+    .maybeSingle();
+
+  if (existing && existing.id !== group.id) {
+    return { error: `Ya existe un grupo llamado "${group.name}". Por favor usa un nombre diferente.` };
+  }
 
   const { error } = group.id 
     ? await supabase.from('category_groups').update(payload).eq('id', group.id)
