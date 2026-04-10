@@ -20,6 +20,7 @@ import {
   buildDashboardSummary,
   buildTrendData,
   buildGroupBreakdown,
+  buildNestedBreakdown,
   CHART_COLORS,
 } from '@/lib/dashboard';
 import { formatCurrency, formatLongDate } from '@/lib/format';
@@ -35,6 +36,22 @@ export function DashboardScreen() {
   const [trendPeriod, setTrendPeriod] = useState<'month' | 'year'>('month');
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  
+  const [viewMode, setViewMode] = useState<'groups' | 'establishments'>('groups');
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
+    );
+  };
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => 
+      prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId]
+    );
+  };
 
   if (!hydrated || !state.settings) {
     return <LoadingCard label={commonT('loading')} />;
@@ -59,6 +76,12 @@ export function DashboardScreen() {
     const groupBreakdown = buildGroupBreakdown(filteredExpenses, categories, groups);
     
     const monthlyTrend = buildTrendData(expenses, categories, groups, trendPeriod);
+    const nestedBreakdown = buildNestedBreakdown(filteredExpenses, categories, groups);
+    
+    // Choose data for Pie Chart based on viewMode
+    const pieData = viewMode === 'groups' 
+      ? nestedBreakdown.map(g => ({ id: g.id, name: g.name, amount: g.amount, color: g.color }))
+      : categoryBreakdown;
     
     // Formatter for the selected month label
     const [selYear, selMonth] = selectedMonth.split('-').map(Number);
@@ -220,19 +243,34 @@ export function DashboardScreen() {
                 <h2 className="text-lg font-semibold">{t('byCategory')}</h2>
                 <p className="text-sm text-slate-400">{t('categoryHint')}</p>
               </div>
+              <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+                {(['groups', 'establishments'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase transition ${
+                      viewMode === mode
+                        ? 'bg-sky-300 text-slate-950 shadow-lg shadow-sky-500/20'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {mode === 'groups' ? 'Grupos' : 'Stores'}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="mt-5 h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={categoryBreakdown}
+                    data={pieData}
                     dataKey="amount"
                     nameKey="name"
                     innerRadius={65}
                     outerRadius={100}
                     paddingAngle={4}
                   >
-                    {categoryBreakdown.map((entry: any) => (
+                    {pieData.map((entry: any) => (
                       <Cell key={entry.id} fill={entry.color} />
                     ))}
                   </Pie>
@@ -248,51 +286,115 @@ export function DashboardScreen() {
               </ResponsiveContainer>
             </div>
             <div className="grid gap-3">
-              {categoryBreakdown.map((entry: any) => (
-                <div 
-                  key={entry.id} 
-                  onClick={() => setSelectedCategoryId(selectedCategoryId === entry.id ? null : entry.id)}
-                  className={`flex items-center justify-between text-sm p-2 rounded-xl cursor-pointer transition-all duration-300 ${
-                    selectedCategoryId === entry.id ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`size-3 rounded-full transition-transform duration-300 ${selectedCategoryId === entry.id ? 'scale-125 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''}`}
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <div className="flex flex-col">
-                      <span className={selectedCategoryId === entry.id ? 'font-semibold text-white' : ''}>
-                        {entry.name}
+              {viewMode === 'groups' ? (
+                nestedBreakdown.map((group) => (
+                  <div key={group.id} className="space-y-2">
+                    {/* Level 1: Group Row */}
+                    <div 
+                      onClick={() => toggleGroupExpansion(group.id)}
+                      className={`flex items-center justify-between text-sm p-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                        expandedGroups.includes(group.id) ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`size-3 rounded-full transition-transform duration-300 ${expandedGroups.includes(group.id) ? 'scale-125' : ''}`}
+                          style={{ backgroundColor: group.color }}
+                        />
+                        <span className={expandedGroups.includes(group.id) ? 'font-bold text-white' : 'font-medium'}>
+                          {group.name}
+                        </span>
+                      </div>
+                      <span className="text-slate-300 font-bold">
+                        {formatCurrency(group.amount, locale, state.settings.currency)}
                       </span>
-                      {selectedCategoryId === entry.id && (
-                        <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1">
-                          <span className="text-[10px] text-sky-300 block mb-2">
-                            {entry.count} {entry.count === 1 ? 'registro' : 'registros'} este mes:
+                    </div>
+
+                    {/* Level 2: Establishments (Indented) */}
+                    {expandedGroups.includes(group.id) && group.establishments.map((est) => (
+                      <div key={est.id} className="ml-6 space-y-1 animate-in fade-in slide-in-from-left-2 duration-300">
+                        <div 
+                          onClick={() => toggleCategoryExpansion(est.id)}
+                          className={`flex items-center justify-between text-[13px] p-2 rounded-lg cursor-pointer transition-all ${
+                            expandedCategories.includes(est.id) ? 'bg-white/5' : 'hover:bg-white/5'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="size-1.5 rounded-full" style={{ backgroundColor: est.color }} />
+                            <span className={expandedCategories.includes(est.id) ? 'text-sky-200' : 'text-slate-300'}>
+                              {est.name}
+                            </span>
+                          </div>
+                          <span className="text-slate-400 font-medium">
+                            {formatCurrency(est.amount, locale, state.settings.currency)}
                           </span>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                            {entry.registrations?.map((amt: number, i: number) => (
-                              <div key={i} className="flex items-center gap-2 text-[11px] text-slate-400">
-                                <span className="font-medium text-slate-500">{i + 1}.</span>
-                                <span>{formatCurrency(amt, locale, state.settings.currency)}</span>
+                        </div>
+
+                        {/* Level 3: Transactions (Date + Amount) */}
+                        {expandedCategories.includes(est.id) && (
+                          <div className="ml-4 pb-1 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                            {est.transactions.map((tx) => (
+                              <div key={tx.id} className="flex items-center justify-between text-[11px] px-3 py-1 bg-white/5 rounded-md border-l border-white/10">
+                                <span className="text-slate-500">{tx.date}</span>
+                                <span className="text-slate-300 font-medium">
+                                  {formatCurrency(tx.amount, locale, state.settings.currency)}
+                                </span>
                               </div>
                             ))}
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <span className={`text-slate-300 ${selectedCategoryId === entry.id ? 'font-bold text-sky-200' : ''}`}>
-                    {formatCurrency(entry.amount, locale, state.settings.currency)}
-                  </span>
-                </div>
-              ))}
-              {categoryBreakdown.length > 0 && (
+                ))
+              ) : (
+                categoryBreakdown.map((entry: any) => (
+                  <div 
+                    key={entry.id} 
+                    onClick={() => setSelectedCategoryId(selectedCategoryId === entry.id ? null : entry.id)}
+                    className={`flex items-center justify-between text-sm p-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                      selectedCategoryId === entry.id ? 'bg-white/10 shadow-inner' : 'hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`size-3 rounded-full transition-transform duration-300 ${selectedCategoryId === entry.id ? 'scale-125 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : ''}`}
+                        style={{ backgroundColor: entry.color }}
+                      />
+                      <div className="flex flex-col">
+                        <span className={selectedCategoryId === entry.id ? 'font-semibold text-white' : ''}>
+                          {entry.name}
+                        </span>
+                        {selectedCategoryId === entry.id && (
+                          <div className="mt-2 space-y-1 animate-in fade-in slide-in-from-top-1">
+                            <span className="text-[10px] text-sky-300 block mb-2">
+                              {entry.count} {entry.count === 1 ? 'registro' : 'registros'} este mes:
+                            </span>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                              {entry.registrations?.map((amt: number, i: number) => (
+                                <div key={i} className="flex items-center gap-2 text-[11px] text-slate-400">
+                                  <span className="font-medium text-slate-500">{i + 1}.</span>
+                                  <span>{formatCurrency(amt, locale, state.settings.currency)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-slate-300 ${selectedCategoryId === entry.id ? 'font-bold text-sky-200' : ''}`}>
+                      {formatCurrency(entry.amount, locale, state.settings.currency)}
+                    </span>
+                  </div>
+                ))
+              )}
+              
+              {pieData.length > 0 && (
                 <div className="mt-2 pt-3 flex items-center justify-between text-sm font-semibold border-t border-white/10">
                   <span>{t('totalExpenses')}</span>
                   <span className="text-slate-200">
                     {formatCurrency(
-                      categoryBreakdown.reduce((sum: number, entry: any) => sum + entry.amount, 0),
+                      pieData.reduce((sum: number, entry: any) => sum + entry.amount, 0),
                       locale,
                       state.settings.currency
                     )}
@@ -301,6 +403,7 @@ export function DashboardScreen() {
               )}
             </div>
           </article>
+
         </div>
 
         {/* Budget Progress Section */}

@@ -163,3 +163,84 @@ export function buildGroupBreakdown(expenses: Expense[], categories: Category[],
     };
   }).sort((a, b) => b.spent - a.spent);
 }
+export function buildNestedBreakdown(
+  expenses: Expense[],
+  categories: Category[],
+  groups: CategoryGroup[]
+) {
+  if (!expenses || !Array.isArray(expenses)) return [];
+  const catList = Array.isArray(categories) ? categories : [];
+  const groupList = Array.isArray(groups) ? groups : [];
+
+  // 1. Group by Category Group
+  const breakdown = groupList.map((group) => {
+    const groupCategories = catList.filter((c) => c.groupId === group.id);
+    const groupCategoryIds = new Set(groupCategories.map((c) => c.id));
+    
+    const groupExpenses = expenses.filter((e) => groupCategoryIds.has(e.categoryId));
+    const spent = groupExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+    // 2. Map Establishments within this Group
+    const establishments = groupCategories
+      .map((cat) => {
+        const catExpenses = groupExpenses.filter((e) => e.categoryId === cat.id);
+        const amount = catExpenses.reduce((sum, e) => sum + e.amount, 0);
+        
+        return {
+          id: cat.id,
+          name: cat.name,
+          color: cat.color,
+          amount,
+          count: catExpenses.length,
+          transactions: catExpenses.map(e => ({
+            id: e.id,
+            amount: e.amount,
+            date: e.date,
+          })).sort((a, b) => b.date.localeCompare(a.date))
+        };
+      })
+      .filter(est => est.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+
+    return {
+      id: group.id,
+      name: group.name,
+      color: group.color,
+      amount: spent,
+      establishments
+    };
+  }).filter(g => g.amount > 0).sort((a, b) => b.amount - a.amount);
+
+  // 3. Handle data with NO group
+  const groupIds = new Set(groupList.map(g => g.id));
+  const orphanCats = catList.filter(c => !c.groupId || !groupIds.has(c.groupId));
+  const orphanCatIds = new Set(orphanCats.map(c => c.id));
+  const orphanExpenses = expenses.filter(e => orphanCatIds.has(e.categoryId));
+
+  if (orphanExpenses.length > 0) {
+    const orphanEstablishments = orphanCats.map(cat => {
+      const catExpenses = orphanExpenses.filter(e => e.categoryId === cat.id);
+      const amount = catExpenses.reduce((sum, e) => sum + e.amount, 0);
+      return {
+        id: cat.id,
+        name: cat.name,
+        color: cat.color,
+        amount,
+        count: catExpenses.length,
+        transactions: catExpenses.map(e => ({ id: e.id, amount: e.amount, date: e.date })).sort((a, b) => b.date.localeCompare(a.date))
+      };
+    }).filter(est => est.amount > 0).sort((a, b) => b.amount - a.amount);
+
+    if (orphanEstablishments.length > 0) {
+      breakdown.push({
+        id: 'orphans',
+        name: 'Extras / Otros',
+        color: '#94a3b8',
+        amount: orphanExpenses.reduce((sum, e) => sum + e.amount, 0),
+        establishments: orphanEstablishments
+      });
+    }
+  }
+
+  return breakdown;
+}
