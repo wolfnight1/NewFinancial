@@ -240,7 +240,9 @@ export function DashboardScreen() {
           <article className="rounded-[28px] border border-white/10 bg-slate-950/35 p-5">
             <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{t('byCategory')}</h2>
+                <h2 className="text-lg font-semibold">
+                  {viewMode === 'groups' ? t('byGroup') : t('byCategory')}
+                </h2>
                 <p className="text-sm text-slate-400">{t('categoryHint')}</p>
               </div>
               <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">

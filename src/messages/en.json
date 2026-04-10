@@ -29,6 +29,7 @@
     "balance": "Remaining balance",
     "sharedExpenses": "Shared expenses",
     "byCategory": "Spending by establishment",
+    "byGroup": "Spending by category",
     "monthlyTrend": "Monthly trend",
     "monthlyTrendHint": "How total expenses evolve month by month.",
     "categoryHint": "Current spend distribution across your establishments.",

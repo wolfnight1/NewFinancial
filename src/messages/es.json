@@ -29,6 +29,7 @@
     "balance": "Balance restante",
     "sharedExpenses": "Gastos compartidos",
     "byCategory": "Gasto por establecimiento",
+    "byGroup": "Gasto por categoría",
     "monthlyTrend": "Tendencia mensual",
     "monthlyTrendHint": "Evolucion del gasto agregado por mes.",
     "categoryHint": "Distribucion actual del gasto segun tus establecimientos.",
