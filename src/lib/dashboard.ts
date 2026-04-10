@@ -242,5 +242,9 @@ export function buildNestedBreakdown(
     }
   }
 
-  return breakdown;
+  // 4. Assign vibrant colors from palette to top-level groups for the Pie Chart
+  return breakdown.map((item, index) => ({
+    ...item,
+    color: item.id === 'orphans' ? '#94a3b8' : (item.color && item.color !== '#000000' ? item.color : CHART_COLORS[index % CHART_COLORS.length]),
+  }));
 }
